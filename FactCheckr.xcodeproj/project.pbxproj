@@ -1,0 +1,730 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		F10000000000000000000001 /* FactCheckrApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000001 /* FactCheckrApp.swift */; };
+		F10000000000000000000002 /* APIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000002 /* APIConfig.swift */; };
+		F10000000000000000000003 /* PoW.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000003 /* PoW.swift */; };
+		F10000000000000000000004 /* URLDetect.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000004 /* URLDetect.swift */; };
+		F10000000000000000000005 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000005 /* APIClient.swift */; };
+		F10000000000000000000006 /* APIErrorMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000006 /* APIErrorMapper.swift */; };
+		F10000000000000000000007 /* AnalysisModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000007 /* AnalysisModels.swift */; };
+		F10000000000000000000008 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000008 /* AuthManager.swift */; };
+		F10000000000000000000009 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000009 /* HomeViewModel.swift */; };
+		F1000000000000000000000A /* AnalyzeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000000A /* AnalyzeViewModel.swift */; };
+		F1000000000000000000000B /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000000B /* AuthViewModel.swift */; };
+		F1000000000000000000000C /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000000C /* HomeView.swift */; };
+		F1000000000000000000000D /* AnalyzeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000000D /* AnalyzeView.swift */; };
+		F1000000000000000000000E /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000000E /* ResultView.swift */; };
+		F1000000000000000000000F /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000000F /* LoginView.swift */; };
+		F10000000000000000000010 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000010 /* RegisterView.swift */; };
+		F10000000000000000000011 /* VerifyEmailInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000011 /* VerifyEmailInfoView.swift */; };
+		F10000000000000000000013 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000013 /* Assets.xcassets */; };
+		F10000000000000000000015 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = F50000000000000000000002 /* FirebaseAuth */; };
+		F10000000000000000000016 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000016 /* GoogleService-Info.plist */; };
+		F10000000000000000000017 /* FCTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000017 /* FCTheme.swift */; };
+		F10000000000000000000018 /* FCComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000018 /* FCComponents.swift */; };
+		F10000000000000000000019 /* SharedLinkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000019 /* SharedLinkStore.swift */; };
+		F1000000000000000000001A /* ShareURLExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000001B /* ShareURLExtractor.swift */; };
+		F1000000000000000000001B /* ShareLinkHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000001C /* ShareLinkHandler.swift */; };
+		F1000000000000000000001D /* FactCheckrShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F2000000000000000000001E /* FactCheckrShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F1000000000000000000001E /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000001F /* ShareViewController.swift */; };
+		F1000000000000000000001F /* SharedLinkStore.swift in ShareExtension Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000019 /* SharedLinkStore.swift */; };
+		F10000000000000000000020 /* ShareURLExtractor.swift in ShareExtension Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000001B /* ShareURLExtractor.swift */; };
+		F10000000000000000000021 /* URLDetect.swift in ShareExtension Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000004 /* URLDetect.swift */; };
+		F10000000000000000000022 /* AnalysisHistoryEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000022 /* AnalysisHistoryEntry.swift */; };
+		F10000000000000000000023 /* AnalysisHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000023 /* AnalysisHistoryStore.swift */; };
+		F10000000000000000000024 /* UserProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000024 /* UserProfileService.swift */; };
+		F10000000000000000000025 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000025 /* DashboardViewModel.swift */; };
+		F10000000000000000000026 /* FCDashboardComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000026 /* FCDashboardComponents.swift */; };
+		F10000000000000000000027 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000027 /* DashboardView.swift */; };
+		F10000000000000000000028 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000028 /* AccountView.swift */; };
+		F10000000000000000000029 /* AppShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000029 /* AppShellView.swift */; };
+		F1000000000000000000002A /* ReportDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000002A /* ReportDetailView.swift */; };
+		F1000000000000000000002B /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = F50000000000000000000003 /* FirebaseFirestore */; };
+		F10000000000000000000031 /* AppMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000002B /* AppMetadata.swift */; };
+		F10000000000000000000032 /* AppGroupConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000002C /* AppGroupConfig.swift */; };
+		F10000000000000000000033 /* EmptyResultFallback.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000002D /* EmptyResultFallback.swift */; };
+		F10000000000000000000034 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000002E /* PrivacyInfo.xcprivacy */; };
+		F10000000000000000000035 /* AppGroupConfig.swift in ShareExtension Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000002C /* AppGroupConfig.swift */; };
+		F10000000000000000000036 /* AppRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000036 /* AppRoute.swift */; };
+		F10000000000000000000037 /* OnboardingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000037 /* OnboardingStore.swift */; };
+		F10000000000000000000038 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000038 /* OnboardingView.swift */; };
+		F10000000000000000000039 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000039 /* AuthView.swift */; };
+		F1000000000000000000003A /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000003A /* HistoryView.swift */; };
+		F1000000000000000000003B /* VerdictCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000003B /* VerdictCategory.swift */; };
+		F1000000000000000000003C /* AppTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000003C /* AppTab.swift */; };
+		F1000000000000000000003D /* PipelineStage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000003D /* PipelineStage.swift */; };
+		F1000000000000000000003E /* FCAnimations.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000003E /* FCAnimations.swift */; };
+		F1000000000000000000003F /* FCAnalysisProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000003F /* FCAnalysisProgressView.swift */; };
+		F10000000000000000000040 /* FCAnalysisResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000040 /* FCAnalysisResultView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		F20000000000000000000001 /* FactCheckrApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FactCheckrApp.swift; sourceTree = "<group>"; };
+		F20000000000000000000002 /* APIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfig.swift; sourceTree = "<group>"; };
+		F20000000000000000000003 /* PoW.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoW.swift; sourceTree = "<group>"; };
+		F20000000000000000000004 /* URLDetect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLDetect.swift; sourceTree = "<group>"; };
+		F20000000000000000000005 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		F20000000000000000000006 /* APIErrorMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIErrorMapper.swift; sourceTree = "<group>"; };
+		F20000000000000000000007 /* AnalysisModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisModels.swift; sourceTree = "<group>"; };
+		F20000000000000000000008 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
+		F20000000000000000000009 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
+		F2000000000000000000000A /* AnalyzeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyzeViewModel.swift; sourceTree = "<group>"; };
+		F2000000000000000000000B /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		F2000000000000000000000C /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		F2000000000000000000000D /* AnalyzeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyzeView.swift; sourceTree = "<group>"; };
+		F2000000000000000000000E /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
+		F2000000000000000000000F /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		F20000000000000000000010 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
+		F20000000000000000000011 /* VerifyEmailInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyEmailInfoView.swift; sourceTree = "<group>"; };
+		F20000000000000000000013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F20000000000000000000015 /* FactCheckr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FactCheckr.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F20000000000000000000016 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		F20000000000000000000017 /* FCTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FCTheme.swift; sourceTree = "<group>"; };
+		F20000000000000000000018 /* FCComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FCComponents.swift; sourceTree = "<group>"; };
+		F20000000000000000000019 /* SharedLinkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedLinkStore.swift; sourceTree = "<group>"; };
+		F2000000000000000000001B /* ShareURLExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareURLExtractor.swift; sourceTree = "<group>"; };
+		F2000000000000000000001C /* ShareLinkHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareLinkHandler.swift; sourceTree = "<group>"; };
+		F2000000000000000000001D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F2000000000000000000001E /* FactCheckrShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FactCheckrShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F2000000000000000000001F /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		F20000000000000000000020 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F20000000000000000000021 /* FactCheckrShare.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FactCheckrShare.entitlements; sourceTree = "<group>"; };
+		F20000000000000000000022 /* AnalysisHistoryEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisHistoryEntry.swift; sourceTree = "<group>"; };
+		F20000000000000000000023 /* AnalysisHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisHistoryStore.swift; sourceTree = "<group>"; };
+		F20000000000000000000024 /* UserProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileService.swift; sourceTree = "<group>"; };
+		F20000000000000000000025 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
+		F20000000000000000000026 /* FCDashboardComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FCDashboardComponents.swift; sourceTree = "<group>"; };
+		F20000000000000000000027 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		F20000000000000000000028 /* AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
+		F20000000000000000000029 /* AppShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShellView.swift; sourceTree = "<group>"; };
+		F2000000000000000000002A /* ReportDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportDetailView.swift; sourceTree = "<group>"; };
+		F2000000000000000000002B /* AppMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMetadata.swift; sourceTree = "<group>"; };
+		F2000000000000000000002C /* AppGroupConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroupConfig.swift; sourceTree = "<group>"; };
+		F2000000000000000000002D /* EmptyResultFallback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyResultFallback.swift; sourceTree = "<group>"; };
+		F2000000000000000000002E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		F20000000000000000000036 /* AppRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRoute.swift; sourceTree = "<group>"; };
+		F20000000000000000000037 /* OnboardingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingStore.swift; sourceTree = "<group>"; };
+		F20000000000000000000038 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		F20000000000000000000039 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
+		F2000000000000000000003A /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		F2000000000000000000003B /* VerdictCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerdictCategory.swift; sourceTree = "<group>"; };
+		F2000000000000000000003C /* AppTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTab.swift; sourceTree = "<group>"; };
+		F2000000000000000000003D /* PipelineStage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PipelineStage.swift; sourceTree = "<group>"; };
+		F2000000000000000000003E /* FCAnimations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FCAnimations.swift; sourceTree = "<group>"; };
+		F2000000000000000000003F /* FCAnalysisProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FCAnalysisProgressView.swift; sourceTree = "<group>"; };
+		F20000000000000000000040 /* FCAnalysisResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FCAnalysisResultView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F30000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F10000000000000000000015 /* FirebaseAuth in Frameworks */,
+				F1000000000000000000002B /* FirebaseFirestore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F30000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		F40000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				F40000000000000000000002 /* FactCheckr */,
+				F4000000000000000000000C /* FactCheckrShare */,
+				F40000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F40000000000000000000002 /* FactCheckr */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000001 /* FactCheckrApp.swift */,
+				F40000000000000000000004 /* Config */,
+				F40000000000000000000005 /* Networking */,
+				F40000000000000000000006 /* Models */,
+				F4000000000000000000000E /* Services */,
+				F40000000000000000000007 /* Auth */,
+				F40000000000000000000008 /* ViewModels */,
+				F40000000000000000000009 /* Views */,
+				F4000000000000000000000B /* Theme */,
+				F4000000000000000000000D /* Shared */,
+				F4000000000000000000000A /* Resources */,
+				F2000000000000000000001D /* Info.plist */,
+				F2000000000000000000002E /* PrivacyInfo.xcprivacy */,
+				F20000000000000000000013 /* Assets.xcassets */,
+			);
+			path = FactCheckr;
+			sourceTree = "<group>";
+		};
+		F40000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000015 /* FactCheckr.app */,
+				F2000000000000000000001E /* FactCheckrShare.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F40000000000000000000004 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000002 /* APIConfig.swift */,
+				F2000000000000000000002B /* AppMetadata.swift */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		F40000000000000000000005 /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000003 /* PoW.swift */,
+				F20000000000000000000004 /* URLDetect.swift */,
+				F20000000000000000000005 /* APIClient.swift */,
+				F20000000000000000000006 /* APIErrorMapper.swift */,
+			);
+			path = Networking;
+			sourceTree = "<group>";
+		};
+		F40000000000000000000006 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000007 /* AnalysisModels.swift */,
+				F20000000000000000000022 /* AnalysisHistoryEntry.swift */,
+				F20000000000000000000036 /* AppRoute.swift */,
+				F2000000000000000000003B /* VerdictCategory.swift */,
+				F2000000000000000000003C /* AppTab.swift */,
+				F2000000000000000000003D /* PipelineStage.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		F4000000000000000000000E /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000023 /* AnalysisHistoryStore.swift */,
+				F20000000000000000000024 /* UserProfileService.swift */,
+				F20000000000000000000037 /* OnboardingStore.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		F40000000000000000000007 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000008 /* AuthManager.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		F40000000000000000000008 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000009 /* HomeViewModel.swift */,
+				F2000000000000000000000A /* AnalyzeViewModel.swift */,
+				F2000000000000000000000B /* AuthViewModel.swift */,
+				F20000000000000000000025 /* DashboardViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		F40000000000000000000009 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				F2000000000000000000000C /* HomeView.swift */,
+				F2000000000000000000000D /* AnalyzeView.swift */,
+				F2000000000000000000000E /* ResultView.swift */,
+				F2000000000000000000000F /* LoginView.swift */,
+				F20000000000000000000010 /* RegisterView.swift */,
+				F20000000000000000000011 /* VerifyEmailInfoView.swift */,
+				F20000000000000000000027 /* DashboardView.swift */,
+				F20000000000000000000028 /* AccountView.swift */,
+				F20000000000000000000029 /* AppShellView.swift */,
+				F2000000000000000000002A /* ReportDetailView.swift */,
+				F2000000000000000000002D /* EmptyResultFallback.swift */,
+				F20000000000000000000038 /* OnboardingView.swift */,
+				F20000000000000000000039 /* AuthView.swift */,
+				F2000000000000000000003A /* HistoryView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		F4000000000000000000000A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000016 /* GoogleService-Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		F4000000000000000000000B /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000017 /* FCTheme.swift */,
+				F20000000000000000000018 /* FCComponents.swift */,
+				F20000000000000000000026 /* FCDashboardComponents.swift */,
+				F2000000000000000000003E /* FCAnimations.swift */,
+				F2000000000000000000003F /* FCAnalysisProgressView.swift */,
+				F20000000000000000000040 /* FCAnalysisResultView.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		F4000000000000000000000D /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000019 /* SharedLinkStore.swift */,
+				F2000000000000000000002C /* AppGroupConfig.swift */,
+				F2000000000000000000001B /* ShareURLExtractor.swift */,
+				F2000000000000000000001C /* ShareLinkHandler.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		F4000000000000000000000C /* FactCheckrShare */ = {
+			isa = PBXGroup;
+			children = (
+				F2000000000000000000001F /* ShareViewController.swift */,
+				F20000000000000000000020 /* Info.plist */,
+				F20000000000000000000021 /* FactCheckrShare.entitlements */,
+			);
+			path = FactCheckrShare;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXContainerItemProxy section */
+		FA00000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F80000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F60000000000000000000004;
+			remoteInfo = FactCheckrShare;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXNativeTarget section */
+		F60000000000000000000001 /* FactCheckr */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F70000000000000000000003 /* Build configuration list for PBXNativeTarget "FactCheckr" */;
+			buildPhases = (
+				F60000000000000000000002 /* Sources */,
+				F30000000000000000000001 /* Frameworks */,
+				F60000000000000000000003 /* Resources */,
+				F60000000000000000000005 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FA00000000000000000000002 /* PBXTargetDependency */,
+			);
+			name = FactCheckr;
+			packageProductDependencies = (
+				F50000000000000000000002 /* FirebaseAuth */,
+				F50000000000000000000003 /* FirebaseFirestore */,
+			);
+			productName = FactCheckr;
+			productReference = F20000000000000000000015 /* FactCheckr.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F60000000000000000000004 /* FactCheckrShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F70000000000000000000004 /* Build configuration list for PBXNativeTarget "FactCheckrShare" */;
+			buildPhases = (
+				F60000000000000000000006 /* Sources */,
+				F30000000000000000000002 /* Frameworks */,
+				F60000000000000000000007 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FactCheckrShare;
+			productName = FactCheckrShare;
+			productReference = F2000000000000000000001E /* FactCheckrShare.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F60000000000000000000005 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				F1000000000000000000001D /* FactCheckrShare.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		FA00000000000000000000002 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F60000000000000000000004 /* FactCheckrShare */;
+			targetProxy = FA00000000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXProject section */
+		F80000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1620;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					F60000000000000000000001 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+					F60000000000000000000004 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+				};
+			};
+			buildConfigurationList = F70000000000000000000001 /* Build configuration list for PBXProject "FactCheckr" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = pl;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				pl,
+				Base,
+			);
+			mainGroup = F40000000000000000000001;
+			packageReferences = (
+				F50000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
+			productRefGroup = F40000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F60000000000000000000001 /* FactCheckr */,
+				F60000000000000000000004 /* FactCheckrShare */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F60000000000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F10000000000000000000013 /* Assets.xcassets in Resources */,
+				F10000000000000000000016 /* GoogleService-Info.plist in Resources */,
+				F10000000000000000000034 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F60000000000000000000007 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F60000000000000000000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F10000000000000000000001 /* FactCheckrApp.swift in Sources */,
+				F10000000000000000000002 /* APIConfig.swift in Sources */,
+				F10000000000000000000003 /* PoW.swift in Sources */,
+				F10000000000000000000004 /* URLDetect.swift in Sources */,
+				F10000000000000000000005 /* APIClient.swift in Sources */,
+				F10000000000000000000006 /* APIErrorMapper.swift in Sources */,
+				F10000000000000000000007 /* AnalysisModels.swift in Sources */,
+				F10000000000000000000008 /* AuthManager.swift in Sources */,
+				F10000000000000000000009 /* HomeViewModel.swift in Sources */,
+				F1000000000000000000000A /* AnalyzeViewModel.swift in Sources */,
+				F1000000000000000000000B /* AuthViewModel.swift in Sources */,
+				F1000000000000000000000C /* HomeView.swift in Sources */,
+				F1000000000000000000000D /* AnalyzeView.swift in Sources */,
+				F1000000000000000000000E /* ResultView.swift in Sources */,
+				F1000000000000000000000F /* LoginView.swift in Sources */,
+				F10000000000000000000010 /* RegisterView.swift in Sources */,
+				F10000000000000000000011 /* VerifyEmailInfoView.swift in Sources */,
+				F10000000000000000000017 /* FCTheme.swift in Sources */,
+				F10000000000000000000018 /* FCComponents.swift in Sources */,
+				F10000000000000000000019 /* SharedLinkStore.swift in Sources */,
+				F1000000000000000000001A /* ShareURLExtractor.swift in Sources */,
+				F1000000000000000000001B /* ShareLinkHandler.swift in Sources */,
+				F10000000000000000000022 /* AnalysisHistoryEntry.swift in Sources */,
+				F10000000000000000000023 /* AnalysisHistoryStore.swift in Sources */,
+				F10000000000000000000024 /* UserProfileService.swift in Sources */,
+				F10000000000000000000025 /* DashboardViewModel.swift in Sources */,
+				F10000000000000000000026 /* FCDashboardComponents.swift in Sources */,
+				F10000000000000000000027 /* DashboardView.swift in Sources */,
+				F10000000000000000000028 /* AccountView.swift in Sources */,
+				F10000000000000000000029 /* AppShellView.swift in Sources */,
+				F1000000000000000000002A /* ReportDetailView.swift in Sources */,
+				F10000000000000000000031 /* AppMetadata.swift in Sources */,
+				F10000000000000000000032 /* AppGroupConfig.swift in Sources */,
+				F10000000000000000000033 /* EmptyResultFallback.swift in Sources */,
+				F10000000000000000000036 /* AppRoute.swift in Sources */,
+				F10000000000000000000037 /* OnboardingStore.swift in Sources */,
+				F10000000000000000000038 /* OnboardingView.swift in Sources */,
+				F10000000000000000000039 /* AuthView.swift in Sources */,
+				F1000000000000000000003A /* HistoryView.swift in Sources */,
+				F1000000000000000000003B /* VerdictCategory.swift in Sources */,
+				F1000000000000000000003C /* AppTab.swift in Sources */,
+				F1000000000000000000003D /* PipelineStage.swift in Sources */,
+				F1000000000000000000003E /* FCAnimations.swift in Sources */,
+				F1000000000000000000003F /* FCAnalysisProgressView.swift in Sources */,
+				F10000000000000000000040 /* FCAnalysisResultView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F60000000000000000000006 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F1000000000000000000001E /* ShareViewController.swift in Sources */,
+				F1000000000000000000001F /* SharedLinkStore.swift in ShareExtension Sources */,
+				F10000000000000000000035 /* AppGroupConfig.swift in ShareExtension Sources */,
+				F10000000000000000000020 /* ShareURLExtractor.swift in ShareExtension Sources */,
+				F10000000000000000000021 /* URLDetect.swift in ShareExtension Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		F90000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		F90000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		F90000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FactCheckr/FactCheckr.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = NNNUY4G9BY;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FactCheckr/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Fact Checkr";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = NO;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.factcheckr.ios;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		F90000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = FactCheckr/FactCheckr.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = NNNUY4G9BY;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FactCheckr/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Fact Checkr";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = NO;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.factcheckr.ios;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		F90000000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = FactCheckrShare/FactCheckrShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = NNNUY4G9BY;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FactCheckrShare/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Fact Checkr";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.factcheckr.ios.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		F90000000000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = FactCheckrShare/FactCheckrShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = NNNUY4G9BY;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FactCheckrShare/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Fact Checkr";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.factcheckr.ios.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F70000000000000000000001 /* Build configuration list for PBXProject "FactCheckr" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F90000000000000000000001 /* Debug */,
+				F90000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F70000000000000000000003 /* Build configuration list for PBXNativeTarget "FactCheckr" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F90000000000000000000003 /* Debug */,
+				F90000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F70000000000000000000004 /* Build configuration list for PBXNativeTarget "FactCheckrShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F90000000000000000000005 /* Debug */,
+				F90000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F50000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F50000000000000000000002 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F50000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		F50000000000000000000003 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F50000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = F80000000000000000000001 /* Project object */;
+}

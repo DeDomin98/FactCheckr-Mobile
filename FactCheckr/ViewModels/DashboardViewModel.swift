@@ -1,0 +1,108 @@
+import Foundation
+
+enum ThreatFilter: String, CaseIterable {
+    case all
+    case none
+    case medium
+    case high
+
+    var label: String {
+        switch self {
+        case .all: return "Wszystkie"
+        case .none: return ThreatLevel.none.label
+        case .medium: return ThreatLevel.medium.label
+        case .high: return ThreatLevel.high.label
+        }
+    }
+}
+
+@MainActor
+final class DashboardViewModel: ObservableObject {
+    @Published var profile: UserProfile?
+    @Published var history: [AnalysisHistoryEntry] = []
+    @Published var isLoading = false
+    @Published var searchQuery = ""
+    @Published var threatFilter: ThreatFilter = .all
+    @Published var expandedId: String?
+    @Published var syncError: String?
+
+    var filteredHistory: [AnalysisHistoryEntry] {
+        var list = history
+        if threatFilter != .all {
+            list = list.filter { $0.threatLevel.rawValue == threatFilter.rawValue }
+        }
+        let q = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if !q.isEmpty {
+            list = list.filter {
+                $0.title.lowercased().contains(q) ||
+                $0.sourceUrl.lowercased().contains(q) ||
+                ($0.verdict?.lowercased().contains(q) ?? false)
+            }
+        }
+        return list
+    }
+
+    var quotaRemaining: Int {
+        guard let profile else { return 0 }
+        if profile.isTester {
+            let month = String(Date().formatted(.iso8601.year().month()))
+            let used = profile.monthlyAnalysisMonth == month ? (profile.monthlyAnalysesUsed ?? 0) : 0
+            return max(0, (profile.monthlyAnalysisLimit ?? 50) - used)
+        }
+        return max(0, profile.freeTokens)
+    }
+
+    var quotaLimit: Int {
+        guard let profile else { return 5 }
+        return profile.isTester ? (profile.monthlyAnalysisLimit ?? 50) : 5
+    }
+
+    var quotaPercent: Double {
+        guard quotaLimit > 0 else { return 0 }
+        return min(Double(quotaRemaining) / Double(quotaLimit), 1)
+    }
+
+    func refresh(authManager: AuthManager) async {
+        isLoading = true
+        syncError = nil
+        defer { isLoading = false }
+
+        var items = AnalysisHistoryStore.shared.load()
+
+        if let uid = authManager.user?.uid {
+            let fetchedProfile = await UserProfileService.shared.fetchProfile(uid: uid)
+            let remote = await UserProfileService.shared.fetchRemoteHistory(uid: uid)
+            profile = fetchedProfile
+
+            if fetchedProfile == nil && authManager.isConfigured {
+                syncError = "Nie udało się pobrać profilu. Sprawdź połączenie."
+            }
+
+            if !remote.isEmpty {
+                let localIds = Set(items.map(\.id))
+                let merged = remote + items.filter { !localIds.contains($0.id) }
+                items = merged.sorted { $0.createdAt > $1.createdAt }
+            }
+        } else {
+            profile = nil
+        }
+
+        history = items
+    }
+
+    func deleteEntry(_ id: String) {
+        AnalysisHistoryStore.shared.delete(id: id)
+        history.removeAll { $0.id == id }
+        if expandedId == id { expandedId = nil }
+    }
+
+    func clearLocalHistory() {
+        AnalysisHistoryStore.shared.clearAll()
+        history = []
+        expandedId = nil
+    }
+
+    func toggleExpanded(_ id: String) {
+        expandedId = expandedId == id ? nil : id
+    }
+}

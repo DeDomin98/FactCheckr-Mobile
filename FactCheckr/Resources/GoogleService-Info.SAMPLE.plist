@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  PLACEHOLDER — nie używaj tego pliku w produkcji.
+  Pobierz prawdziwy GoogleService-Info.plist z Firebase Console
+  i dodaj go jako GoogleService-Info.plist do targetu aplikacji.
+
+  Pola w prawdziwym pliku (wartości z Firebase, nie zgaduj):
+  - API_KEY
+  - GCM_SENDER_ID (= 932783083251)
+  - PROJECT_ID (= factcheckr-e33da)
+  - STORAGE_BUCKET (= factcheckr-e33da.firebasestorage.app)
+  - BUNDLE_ID (= com.factcheckr.ios)
+  - GOOGLE_APP_ID
+-->
+<plist version="1.0">
+<dict>
+	<key>INSTRUCTIONS</key>
+	<string>Pobierz GoogleService-Info.plist z Firebase Console dla bundle ID com.factcheckr.ios</string>
+</dict>
+</plist>

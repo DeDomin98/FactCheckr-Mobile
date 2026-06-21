@@ -1,0 +1,11 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# Firebase — nie commituj prawdziwego plist
+GoogleService-Info.plist
+
+# macOS
+.DS_Store

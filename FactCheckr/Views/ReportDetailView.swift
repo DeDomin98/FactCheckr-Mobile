@@ -25,13 +25,13 @@ struct ReportDetailView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     if let score {
-                        FCReportChip(label: "Wiarygodność", value: "\(score)/100")
+                        FCReportChip(label: Loc.t(.shareCredibility), value: "\(score)/100")
                     }
                     if let m = analysis?.manipulationScore {
-                        FCReportChip(label: "Manipulacja", value: "\(m)/100")
+                        FCReportChip(label: Loc.t(.manipulation), value: "\(m)/100")
                     }
                     if let c = analysis?.confidenceScore {
-                        FCReportChip(label: "Pewność", value: "\(c)/100")
+                        FCReportChip(label: Loc.t(.confidence), value: "\(c)/100")
                     }
                 }
             }
@@ -40,7 +40,7 @@ struct ReportDetailView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "hammer.fill")
                         .foregroundStyle(FCTheme.scoreColor(for: score))
-                    Text("Werdykt: \(verdict)")
+                    Text(String(format: Loc.t(.verdictFmt), verdict))
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(FCTheme.textPrimary)
                 }
@@ -56,9 +56,9 @@ struct ReportDetailView: View {
                     .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusSM, style: .continuous))
             }
 
-            if let assessment = analysis?.overallAssessment {
+            if let assessment = analysis?.assessmentText {
                 VStack(alignment: .leading, spacing: 8) {
-                    FCSectionTitle(icon: "chart.bar.doc.horizontal", title: "Analiza")
+                    FCSectionTitle(icon: "chart.bar.doc.horizontal", title: Loc.t(.secAnalysis))
                     Text(assessment)
                         .font(.caption)
                         .foregroundStyle(FCTheme.textSecondary)
@@ -67,7 +67,7 @@ struct ReportDetailView: View {
 
             if let claims = analysis?.claims, !claims.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
-                    FCSectionTitle(icon: "list.bullet.rectangle", title: "Kluczowe twierdzenia")
+                    FCSectionTitle(icon: "list.bullet.rectangle", title: Loc.t(.keyClaims))
                     ForEach(claims.prefix(5)) { claim in
                         claimRow(claim)
                     }
@@ -76,7 +76,7 @@ struct ReportDetailView: View {
 
             if let indicators = analysis?.indicators, !indicators.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    FCSectionTitle(icon: "waveform.path.ecg", title: "Wskaźniki")
+                    FCSectionTitle(icon: "waveform.path.ecg", title: Loc.t(.secIndicators))
                     ForEach(indicators) { ind in
                         indicatorRow(ind)
                     }
@@ -85,7 +85,7 @@ struct ReportDetailView: View {
 
             if let signals = analysis?.manipulationSignals, !signals.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    FCSectionTitle(icon: "theatermasks.fill", title: "Sygnały manipulacji")
+                    FCSectionTitle(icon: "theatermasks.fill", title: Loc.t(.manipulationSignals))
                     ForEach(signals) { sig in
                         HStack(alignment: .top, spacing: 8) {
                             Image(systemName: "exclamationmark.triangle.fill")
@@ -104,7 +104,7 @@ struct ReportDetailView: View {
             }
 
             if let transcript = response.transcript, !transcript.isEmpty {
-                DisclosureGroup("Transkrypcja") {
+                DisclosureGroup(Loc.t(.transcript)) {
                     Text(transcript)
                         .font(.caption)
                         .foregroundStyle(FCTheme.textSecondary)

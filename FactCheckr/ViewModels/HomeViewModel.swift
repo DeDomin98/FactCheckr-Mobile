@@ -21,7 +21,7 @@ final class HomeViewModel: ObservableObject {
         let trimmed = urlText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
         guard canSubmit else {
-            return "Nieprawidłowy adres URL. Wklej link zaczynający się od https://"
+            return Loc.t(.invalidUrl)
         }
         return nil
     }

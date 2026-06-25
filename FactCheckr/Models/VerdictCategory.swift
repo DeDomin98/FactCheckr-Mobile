@@ -7,6 +7,15 @@ enum VerdictCategory: String {
     case partial = "Częściowo"
     case insufficient = "Brak danych"
 
+    var localizedLabel: String {
+        switch self {
+        case .trueFact: return Loc.t(.verdictTrue)
+        case .falseFact: return Loc.t(.verdictFalse)
+        case .partial: return Loc.t(.verdictPartial)
+        case .insufficient: return Loc.t(.verdictInsufficient)
+        }
+    }
+
     var color: Color {
         switch self {
         case .trueFact: return FCTheme.green

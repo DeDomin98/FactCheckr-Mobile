@@ -13,6 +13,14 @@ enum ThreatLevel: String, Codable, CaseIterable {
         }
     }
 
+    var localizedLabel: String {
+        switch self {
+        case .none: return Loc.t(.threatCredible)
+        case .medium: return Loc.t(.threatSuspicious)
+        case .high: return Loc.t(.threatHighRisk)
+        }
+    }
+
     static func from(score: Int?) -> ThreatLevel {
         guard let score else { return .medium }
         if score >= 70 { return .none }

@@ -1,6 +1,8 @@
 import Foundation
 import FirebaseAuth
 import FirebaseCore
+import GoogleSignIn
+import AuthenticationServices
 
 func configureFirebaseIfPossible() {
     guard Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil else {
@@ -8,6 +10,9 @@ func configureFirebaseIfPossible() {
         return
     }
     FirebaseApp.configure()
+    if let clientID = FirebaseApp.app()?.options.clientID {
+        GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
+    }
 }
 
 func needsEmailVerification(_ user: User) -> Bool {
@@ -37,9 +42,46 @@ final class AuthManager: ObservableObject {
             authListener = Auth.auth().addStateDidChangeListener { [weak self] _, user in
                 Task { @MainActor in
                     self?.user = user
+                    self?.onAuthChanged(user)
                 }
             }
             user = Auth.auth().currentUser
+            AnalysisHistoryStore.shared.activeUID = user?.uid
+        }
+    }
+
+    /// Mirrors the web's `onAuthStateChanged`: scope local data to the account,
+    /// make sure the Firestore user document exists, and keep a fresh ID token in
+    /// the App Group so the share extension can analyze in the background.
+    private func onAuthChanged(_ user: User?) {
+        AnalysisHistoryStore.shared.activeUID = user?.uid
+        guard let user else {
+            AppGroupTokenStore.clear()
+            return
+        }
+        Task {
+            await UserProfileService.shared.ensureUserProfile(
+                uid: user.uid,
+                email: user.email,
+                displayName: user.displayName,
+                photoURL: user.photoURL?.absoluteString
+            )
+            await self.refreshSharedToken()
+        }
+    }
+
+    /// Stores a fresh Firebase ID token in the shared App Group container so the
+    /// share extension can run authenticated analyses without opening the app.
+    func refreshSharedToken() async {
+        guard isConfigured, let user = Auth.auth().currentUser else {
+            AppGroupTokenStore.clear()
+            return
+        }
+        do {
+            let token = try await user.getIDToken()
+            AppGroupTokenStore.save(token: token, uid: user.uid)
+        } catch {
+            // Keep any previously stored token; it may still be valid.
         }
     }
 
@@ -63,8 +105,81 @@ final class AuthManager: ObservableObject {
         try await APIClient.shared.sendVerificationEmail(idToken: token)
     }
 
+    // MARK: - Sign in with Apple
+
+    private var appleCoordinator: AppleSignInCoordinator?
+
+    func signInWithApple() async throws {
+        guard isConfigured else { throw AuthError.notConfigured }
+        errorMessage = nil
+
+        let rawNonce = NonceFactory.random()
+        let coordinator = AppleSignInCoordinator()
+        appleCoordinator = coordinator
+        defer { appleCoordinator = nil }
+
+        let credential = try await coordinator.signIn(hashedNonce: NonceFactory.sha256(rawNonce))
+
+        guard let identityToken = credential.identityToken,
+              let idTokenString = String(data: identityToken, encoding: .utf8) else {
+            throw SocialAuthError.appleTokenMissing
+        }
+
+        let firebaseCredential = OAuthProvider.appleCredential(
+            withIDToken: idTokenString,
+            rawNonce: rawNonce,
+            fullName: credential.fullName
+        )
+
+        let result = try await Auth.auth().signIn(with: firebaseCredential)
+
+        if let fullName = credential.fullName,
+           (result.user.displayName ?? "").isEmpty {
+            let formatter = PersonNameComponentsFormatter()
+            let name = formatter.string(from: fullName)
+            if !name.isEmpty {
+                let change = result.user.createProfileChangeRequest()
+                change.displayName = name
+                try? await change.commitChanges()
+            }
+        }
+        user = result.user
+    }
+
+    // MARK: - Google Sign In
+
+    @MainActor
+    func signInWithGoogle() async throws {
+        guard isConfigured else { throw AuthError.notConfigured }
+        errorMessage = nil
+
+        guard let clientID = FirebaseApp.app()?.options.clientID else {
+            throw SocialAuthError.missingClientID
+        }
+        GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
+
+        guard let presenter = UIApplication.shared.topViewController else {
+            throw SocialAuthError.noPresenter
+        }
+
+        let gidResult = try await GIDSignIn.sharedInstance.signIn(withPresenting: presenter)
+        guard let idToken = gidResult.user.idToken?.tokenString else {
+            throw SocialAuthError.googleTokenMissing
+        }
+        let accessToken = gidResult.user.accessToken.tokenString
+        let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
+
+        let result = try await Auth.auth().signIn(with: credential)
+        user = result.user
+    }
+
+    func handleURL(_ url: URL) -> Bool {
+        GIDSignIn.sharedInstance.handle(url)
+    }
+
     func signOut() throws {
         guard isConfigured else { return }
+        GIDSignIn.sharedInstance.signOut()
         try Auth.auth().signOut()
         user = nil
     }

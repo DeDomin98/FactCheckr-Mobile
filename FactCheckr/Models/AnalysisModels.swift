@@ -14,16 +14,18 @@ enum AnalysisStage: String, CaseIterable {
     case scraping
     case analyzing
 
-    var displayName: String {
+    var localizedDisplayName: String {
         switch self {
-        case .transcribing: return "Transkrypcja"
-        case .extracting: return "Ekstrakcja"
-        case .researching: return "Research"
-        case .judging: return "Werdykt"
-        case .scraping: return "Pobieranie strony"
-        case .analyzing: return "Analiza"
+        case .transcribing: return Loc.t(.stageTranscribing)
+        case .extracting: return Loc.t(.stageExtracting)
+        case .researching: return Loc.t(.stageResearching)
+        case .judging: return Loc.t(.stageJudging)
+        case .scraping: return Loc.t(.stageScraping)
+        case .analyzing: return Loc.t(.stageAnalyzing)
         }
     }
+
+    var displayName: String { localizedDisplayName }
 
     var order: Int {
         switch self {
@@ -63,17 +65,52 @@ struct AnalysisResult: Codable {
     let verdict: String?
     let summary: String?
     let overallAssessment: String?
+    var justification: String? = nil
     let claims: [Claim]?
     let indicators: [Indicator]?
     let manipulationSignals: [ManipulationSignal]?
+    var manipulationTechniques: [ManipulationTechnique]? = nil
     let sourceAssessment: SourceAssessment?
     let missingContext: [String]?
     let correctedInfo: String?
     let categories: [String]?
     let detectedLanguage: String?
     let contentType: String?
+    var modelUsed: String? = nil
     let scoreReasoning: String?
     let evidenceSummary: EvidenceSummary?
+    var pipelineMetadata: PipelineMetadata? = nil
+    var mbfcResult: MbfcResult? = nil
+    var allGroundingSources: [GroundingSource]? = nil
+
+    /// The dashboard shows `overallAssessment` and falls back to `justification`.
+    var assessmentText: String? {
+        let text = overallAssessment ?? justification
+        guard let text, !text.isEmpty else { return nil }
+        return text
+    }
+}
+
+struct PipelineMetadata: Codable {
+    let totalAgentCalls: Int?
+    let groundedSearch: Bool?
+    let flowVersion: String?
+    let sourcesUsed: [String]?
+}
+
+struct MbfcResult: Codable {
+    let domain: String?
+    let biasLabel: String?
+    let factualLabel: String?
+    let credibilityLabel: String?
+    let isQuestionable: Bool?
+}
+
+struct ManipulationTechnique: Codable, Identifiable {
+    var id: String { technique }
+    let technique: String
+    let severity: String?
+    let evidence: String?
 }
 
 struct Claim: Codable, Identifiable {
@@ -110,9 +147,15 @@ struct GroundingSource: Codable, Identifiable {
 
 struct EvidenceSummary: Codable {
     let totalClaims: Int?
+    let totalSources: Int?
     let confirming: Int?
     let contradicting: Int?
     let neutral: Int?
+
+    var confirmingCount: Int { confirming ?? 0 }
+    var contradictingCount: Int { contradicting ?? 0 }
+    var neutralCount: Int { neutral ?? 0 }
+    var total: Int { confirmingCount + contradictingCount + neutralCount }
 }
 
 struct Indicator: Codable, Identifiable {

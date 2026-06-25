@@ -12,7 +12,7 @@ struct AuthScreen<Content: View>: View {
             ScrollView {
                 VStack(spacing: 28) {
                     VStack(spacing: 12) {
-                        FCLogo(size: 48)
+                        FCLogo(size: 64, glow: true)
                         Text(title)
                             .font(.title2.weight(.bold))
                             .foregroundStyle(FCTheme.textPrimary)

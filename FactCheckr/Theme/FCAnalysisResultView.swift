@@ -10,6 +10,8 @@ struct FCAnalysisResultView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
+            FCMediaPreviewHeader(sourceUrl: entry.sourceUrl, entry: entry)
+
             if endpoint == .article {
                 FCArticleResultContent(response: response, sourceUrl: entry.sourceUrl)
             } else {
@@ -17,10 +19,13 @@ struct FCAnalysisResultView: View {
             }
 
             if let onCheckAnother {
-                FCPrimaryButton(title: "Sprawdź kolejny", icon: "plus.magnifyingglass", action: onCheckAnother)
+                FCPrimaryButton(title: Loc.t(.checkAnother), icon: "plus.magnifyingglass", action: onCheckAnother)
             }
         }
         .fcFadeInUp()
+        .onAppear {
+            Haptics.forVerdict(VerdictCategory.from(analysis: analysis))
+        }
     }
 }
 
@@ -34,26 +39,42 @@ struct FCArticleResultContent: View {
     private var score: Int { analysis?.credibilityScore ?? 0 }
     private var level: ScoreLevel { .from(score: score) }
 
+    private var manipulationRows: [ManipulationSignal] {
+        if let signals = analysis?.manipulationSignals, !signals.isEmpty { return signals }
+        return (analysis?.manipulationTechniques ?? []).map {
+            ManipulationSignal(label: $0.technique, severity: $0.severity, detail: $0.evidence)
+        }
+    }
+
+    @State private var pop = false
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             scoreRow
-            if let summary = analysis?.summary {
-                Text(summary)
+            badgesRow
+            if let summary = analysis?.summary, !summary.isEmpty {
+                Text(summary.fcDisplay)
                     .font(.system(size: 15))
                     .foregroundStyle(FCTheme.textSecondary)
                     .lineSpacing(4)
                     .padding(.vertical, 8)
                     .overlay(Rectangle().frame(height: 1).foregroundStyle(FCTheme.border), alignment: .bottom)
             }
-            if let assessment = analysis?.overallAssessment, !assessment.isEmpty {
-                sectionLabel("Analiza")
-                Text(assessment)
+            if let es = analysis?.evidenceSummary, (es.totalSources ?? 0) > 0 {
+                FCEvidenceSummaryCard(summary: es)
+            }
+            if let mbfc = analysis?.mbfcResult, mbfc.domain != nil {
+                FCMbfcCard(result: mbfc)
+            }
+            if let assessment = analysis?.assessmentText {
+                sectionLabel(Loc.t(.secAnalysis))
+                Text(assessment.fcDisplay)
                     .font(.system(size: 15))
                     .foregroundStyle(FCTheme.textSecondary)
                     .lineSpacing(5)
             }
             if let claims = analysis?.claims, !claims.isEmpty {
-                sectionLabel("Twierdzenia i dowody", count: claims.count)
+                sectionLabel(Loc.t(.secClaimsEvidence), count: claims.count)
                 VStack(spacing: 10) {
                     ForEach(claims) { claim in
                         FCWebClaimCard(claim: claim)
@@ -61,22 +82,88 @@ struct FCArticleResultContent: View {
                 }
             }
             if let indicators = analysis?.indicators, !indicators.isEmpty {
-                sectionLabel("Wskaźniki")
+                sectionLabel(Loc.t(.secIndicators))
                 VStack(spacing: 8) {
                     ForEach(indicators) { indicator in
                         FCIndicatorRow(indicator: indicator)
                     }
                 }
             }
-            if let signals = analysis?.manipulationSignals, !signals.isEmpty {
-                sectionLabel("Techniki manipulacji")
+            if !manipulationRows.isEmpty {
+                sectionLabel(Loc.t(.secManipulation))
                 VStack(spacing: 8) {
-                    ForEach(signals) { signal in
+                    ForEach(manipulationRows) { signal in
                         FCManipulationRow(signal: signal)
                     }
                 }
             }
+            if let source = analysis?.sourceAssessment, source.transparency != nil || source.strengths != nil || source.weaknesses != nil {
+                sectionLabel(Loc.t(.secSourceAssessment))
+                FCSourceAssessmentCard(assessment: source)
+            }
+            if let missing = analysis?.missingContext, !missing.isEmpty {
+                sectionLabel(Loc.t(.secMissingContext))
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(Array(missing.enumerated()), id: \.offset) { _, item in
+                        HStack(alignment: .top, spacing: 8) {
+                            Image(systemName: "puzzlepiece.extension.fill")
+                                .font(.caption2)
+                                .foregroundStyle(FCTheme.orange)
+                                .padding(.top, 2)
+                            Text(item.fcDisplay)
+                                .font(.system(size: 14))
+                                .foregroundStyle(FCTheme.textSecondary)
+                        }
+                    }
+                }
+            }
+            if let corrected = analysis?.correctedInfo, !corrected.isEmpty {
+                sectionLabel(Loc.t(.secCorrection))
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .foregroundStyle(FCTheme.green)
+                    Text(corrected.fcDisplay)
+                        .font(.system(size: 14))
+                        .foregroundStyle(FCTheme.textSecondary)
+                        .lineSpacing(4)
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(FCTheme.green.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: FCTheme.radiusMD, style: .continuous)
+                        .stroke(FCTheme.green.opacity(0.25), lineWidth: 1)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusMD, style: .continuous))
+            }
             resultMeta
+        }
+    }
+
+    @ViewBuilder
+    private var badgesRow: some View {
+        let model = analysis?.modelUsed ?? response.modelUsed
+        let grounded = analysis?.pipelineMetadata?.groundedSearch == true
+        let contentType = analysis?.contentType
+        let language = analysis?.detectedLanguage
+        if model != nil || grounded || contentType != nil || language != nil {
+            FCFlowLayout(spacing: 8) {
+                if let model {
+                    FCResultBadge(icon: "shield.lefthalf.filled", text: model, tint: FCTheme.accentLight)
+                }
+                if grounded {
+                    FCResultBadge(icon: "globe", text: Loc.t(.badgeGrounding), tint: FCTheme.green)
+                }
+                if let calls = analysis?.pipelineMetadata?.totalAgentCalls, calls > 0 {
+                    FCResultBadge(icon: "cpu", text: Loc.t(.badgePipeline), tint: FCTheme.accentLight)
+                }
+                if let contentType, !MediaPreviewHelper.isGenericMediaLabel(contentType) {
+                    FCResultBadge(icon: "tag", text: contentType.fcDisplay, tint: FCTheme.textSecondary)
+                }
+                if let language {
+                    FCResultBadge(icon: "character.bubble", text: language.uppercased(), tint: FCTheme.textSecondary)
+                }
+            }
         }
     }
 
@@ -92,10 +179,17 @@ struct FCArticleResultContent: View {
                         .foregroundStyle(level.color)
                 }
                 .frame(width: 60, height: 60)
+                .scaleEffect(pop ? 1 : 0.55)
+                .opacity(pop ? 1 : 0)
+                .onAppear {
+                    withAnimation(.spring(response: 0.5, dampingFraction: 0.55).delay(0.1)) {
+                        pop = true
+                    }
+                }
 
                 VStack(alignment: .leading, spacing: 6) {
                     if let verdict = analysis?.verdict {
-                        Text(verdict)
+                        Text(verdict.fcDisplay)
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(FCTheme.textPrimary)
                     }
@@ -109,21 +203,17 @@ struct FCArticleResultContent: View {
             Spacer(minLength: 0)
 
             VStack(alignment: .leading, spacing: 8) {
-                miniScore(label: "Manipulacja", icon: "theatermasks.fill", value: analysis?.manipulationScore ?? 0, inverted: true)
-                miniScore(label: "Pewność", icon: "shield.fill", value: analysis?.confidenceScore ?? 0, inverted: false)
+                miniScore(label: Loc.t(.manipulation), icon: "theatermasks.fill", value: analysis?.manipulationScore ?? 0, inverted: true)
+                miniScore(label: Loc.t(.confidence), icon: "shield.fill", value: analysis?.confidenceScore ?? 0, inverted: false)
             }
             .frame(minWidth: 180)
         }
     }
 
     private var scoreHint: String {
-        if score >= 70 {
-            return "Wysoki wynik — większość twierdzeń potwierdzona przez niezależne źródła."
-        }
-        if score >= 40 {
-            return "Średni wynik — mieszane dowody: część twierdzeń potwierdzona, inne podważone lub niezweryfikowane."
-        }
-        return "Niski wynik — wiele twierdzeń zaprzeczonych przez niezależne źródła."
+        if score >= 70 { return Loc.t(.scoreHintHigh) }
+        if score >= 40 { return Loc.t(.scoreHintMid) }
+        return Loc.t(.scoreHintLow)
     }
 
     private func miniScore(label: String, icon: String, value: Int, inverted: Bool) -> some View {
@@ -205,6 +295,13 @@ struct FCVideoResultContent: View {
     private var score: Int { analysis?.credibilityScore ?? 0 }
     private var level: ScoreLevel { .videoFrom(score: score) }
 
+    private var manipulationRows: [ManipulationSignal] {
+        if let signals = analysis?.manipulationSignals, !signals.isEmpty { return signals }
+        return (analysis?.manipulationTechniques ?? []).map {
+            ManipulationSignal(label: $0.technique, severity: $0.severity, detail: $0.evidence)
+        }
+    }
+
     @State private var ringProgress: CGFloat = 0
 
     var body: some View {
@@ -213,8 +310,8 @@ struct FCVideoResultContent: View {
             miniStats
             if let summary = analysis?.summary {
                 VStack(alignment: .leading, spacing: 8) {
-                    sectionLabel("Podsumowanie")
-                    Text(summary)
+                    sectionLabel(Loc.t(.secSummary))
+                    Text(summary.fcDisplay)
                         .font(.subheadline)
                         .foregroundStyle(FCTheme.textSecondary)
                         .padding(14)
@@ -224,16 +321,40 @@ struct FCVideoResultContent: View {
                 }
             }
             if let claims = analysis?.claims, !claims.isEmpty {
-                sectionLabel("Twierdzenia", count: claims.count)
+                sectionLabel(Loc.t(.secClaims), count: claims.count)
                 VStack(spacing: 10) {
                     ForEach(claims) { claim in
                         FCVideoClaimCard(claim: claim)
                     }
                 }
             }
+            if !manipulationRows.isEmpty {
+                sectionLabel(Loc.t(.secManipulation))
+                VStack(spacing: 8) {
+                    ForEach(manipulationRows) { signal in
+                        FCManipulationRow(signal: signal)
+                    }
+                }
+            }
+            if let missing = analysis?.missingContext, !missing.isEmpty {
+                sectionLabel(Loc.t(.secMissingContext))
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(Array(missing.enumerated()), id: \.offset) { _, item in
+                        HStack(alignment: .top, spacing: 8) {
+                            Image(systemName: "puzzlepiece.extension.fill")
+                                .font(.caption2)
+                                .foregroundStyle(FCTheme.orange)
+                                .padding(.top, 2)
+                            Text(item.fcDisplay)
+                                .font(.system(size: 14))
+                                .foregroundStyle(FCTheme.textSecondary)
+                        }
+                    }
+                }
+            }
             if let transcript = response.transcript, !transcript.isEmpty {
-                DisclosureGroup("Transkrypcja") {
-                    Text(transcript)
+                DisclosureGroup(Loc.t(.transcript)) {
+                    Text(transcript.fcDisplay)
                         .font(.caption)
                         .foregroundStyle(FCTheme.textSecondary)
                         .padding(.top, 6)
@@ -275,12 +396,12 @@ struct FCVideoResultContent: View {
                     .font(.subheadline.weight(.bold))
                     .foregroundStyle(level.color)
                 if let verdict = analysis?.verdict {
-                    Text(verdict)
+                    Text(verdict.fcDisplay)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(FCTheme.textPrimary)
                 }
                 if let reasoning = analysis?.scoreReasoning {
-                    Text(reasoning)
+                    Text(reasoning.fcDisplay)
                         .font(.caption)
                         .foregroundStyle(FCTheme.textMuted)
                 }
@@ -312,17 +433,17 @@ struct FCVideoResultContent: View {
         HStack(spacing: 0) {
             videoMiniStat(
                 value: "\(analysis?.manipulationScore ?? 0)%",
-                label: "Manipulacja",
+                label: Loc.t(.manipulation),
                 color: FCTheme.scoreColor(for: 100 - (analysis?.manipulationScore ?? 0))
             )
             videoMiniStat(
                 value: "\(analysis?.confidenceScore ?? 0)%",
-                label: "Pewność AI",
+                label: Loc.t(.confidenceAI),
                 color: FCTheme.accentLight
             )
             videoMiniStat(
                 value: "\(analysis?.claims?.count ?? 0)",
-                label: "Twierdzenia",
+                label: Loc.t(.claimsCount),
                 color: FCTheme.textPrimary
             )
         }
@@ -385,7 +506,7 @@ struct FCWebClaimCard: View {
             } label: {
                 HStack(alignment: .top, spacing: 8) {
                     claimStatusIcon
-                    Text(claim.claim)
+                    Text(claim.claim.fcDisplay)
                         .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(FCTheme.textPrimary)
                         .multilineTextAlignment(.leading)
@@ -401,12 +522,12 @@ struct FCWebClaimCard: View {
             if expanded {
                 VStack(alignment: .leading, spacing: 10) {
                     if let reason = claim.reason {
-                        Text(reason)
+                        Text(reason.fcDisplay)
                             .font(.caption)
                             .foregroundStyle(FCTheme.textMuted)
                     }
                     if let summary = claim.researchSummary {
-                        Text(summary)
+                        Text(summary.fcDisplay)
                             .font(.caption)
                             .foregroundStyle(FCTheme.textSecondary)
                     }
@@ -417,7 +538,7 @@ struct FCWebClaimCard: View {
                                     HStack(spacing: 6) {
                                         Image(systemName: "link")
                                             .font(.caption2)
-                                        Text(source.title ?? url)
+                                        Text((source.title ?? url).fcDisplay)
                                             .font(.caption)
                                             .lineLimit(2)
                                     }
@@ -448,16 +569,16 @@ struct FCWebClaimCard: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 10) {
                 if breakdown.confirmingCount > 0 {
-                    evidenceCount("\(breakdown.confirmingCount) potwierdza", color: FCTheme.green, icon: "checkmark.circle.fill")
+                    evidenceCount(String(format: Loc.t(.evidenceConfirmingFmt), breakdown.confirmingCount), color: FCTheme.green, icon: "checkmark.circle.fill")
                 }
                 if breakdown.contradictingCount > 0 {
-                    evidenceCount("\(breakdown.contradictingCount) zaprzecza", color: FCTheme.red, icon: "xmark.circle.fill")
+                    evidenceCount(String(format: Loc.t(.evidenceContradictingFmt), breakdown.contradictingCount), color: FCTheme.red, icon: "xmark.circle.fill")
                 }
                 if breakdown.neutralCount > 0 {
-                    evidenceCount("\(breakdown.neutralCount) kontekst", color: FCTheme.textMuted, icon: "info.circle.fill")
+                    evidenceCount(String(format: Loc.t(.evidenceNeutralFmt), breakdown.neutralCount), color: FCTheme.textMuted, icon: "info.circle.fill")
                 }
                 if breakdown.total == 0 {
-                    evidenceCount("Brak źródeł", color: FCTheme.textMuted, icon: "questionmark.circle")
+                    evidenceCount(Loc.t(.noSources), color: FCTheme.textMuted, icon: "questionmark.circle")
                 }
             }
             if breakdown.total > 0 {
@@ -513,12 +634,12 @@ struct FCVideoClaimCard: View {
             HStack(alignment: .top, spacing: 8) {
                 Image(systemName: statusIcon.name)
                     .foregroundStyle(statusIcon.color)
-                Text(claim.claim)
+                Text(claim.claim.fcDisplay)
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(FCTheme.textPrimary)
             }
             if let reason = claim.reason {
-                Text(reason)
+                Text(reason.fcDisplay)
                     .font(.caption)
                     .foregroundStyle(FCTheme.textMuted)
             }
@@ -552,10 +673,10 @@ struct FCIndicatorRow: View {
                 .frame(width: 6, height: 6)
                 .padding(.top, 6)
             HStack(spacing: 0) {
-                Text(indicator.label)
+                Text(indicator.label.fcDisplay)
                     .font(.subheadline.weight(.semibold))
                     .foregroundColor(FCTheme.textPrimary)
-                Text(": \(indicator.detail ?? "")")
+                Text(": \(indicator.detail?.fcDisplay ?? "")")
                     .font(.subheadline)
                     .foregroundColor(FCTheme.textSecondary)
             }
@@ -580,12 +701,237 @@ struct FCManipulationRow: View {
                 .font(.caption)
                 .foregroundStyle(signal.severity == "high" ? FCTheme.red : FCTheme.orange)
             VStack(alignment: .leading, spacing: 2) {
-                Text(signal.label)
+                Text(signal.label.fcDisplay)
                     .font(.caption.weight(.semibold))
+                    .foregroundStyle(FCTheme.textPrimary)
                 if let detail = signal.detail {
-                    Text(detail).font(.caption2).foregroundStyle(FCTheme.textMuted)
+                    Text(detail.fcDisplay).font(.caption2).foregroundStyle(FCTheme.textMuted)
                 }
             }
+        }
+    }
+}
+
+// MARK: - Result badge + flow layout
+
+struct FCResultBadge: View {
+    let icon: String
+    let text: String
+    var tint: Color = FCTheme.accentLight
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Image(systemName: icon)
+                .font(.system(size: 10, weight: .semibold))
+            Text(text)
+                .font(.system(size: 11, weight: .semibold))
+                .lineLimit(1)
+        }
+        .foregroundStyle(tint)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(tint.opacity(0.12))
+        .overlay(Capsule().stroke(tint.opacity(0.25), lineWidth: 1))
+        .clipShape(Capsule())
+    }
+}
+
+/// Simple wrapping HStack so badges flow onto multiple lines.
+struct FCFlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) -> CGSize {
+        let maxWidth = proposal.width ?? .infinity
+        var rows: [CGFloat] = [0]
+        var rowWidth: CGFloat = 0
+        var totalHeight: CGFloat = 0
+        var rowHeight: CGFloat = 0
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if rowWidth + size.width > maxWidth, rowWidth > 0 {
+                totalHeight += rowHeight + spacing
+                rows.append(0)
+                rowWidth = 0
+                rowHeight = 0
+            }
+            rowWidth += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
+        totalHeight += rowHeight
+        return CGSize(width: maxWidth == .infinity ? rowWidth : maxWidth, height: totalHeight)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) {
+        var x = bounds.minX
+        var y = bounds.minY
+        var rowHeight: CGFloat = 0
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if x + size.width > bounds.maxX, x > bounds.minX {
+                x = bounds.minX
+                y += rowHeight + spacing
+                rowHeight = 0
+            }
+            subview.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+            x += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
+    }
+}
+
+// MARK: - Evidence summary (global)
+
+struct FCEvidenceSummaryCard: View {
+    let summary: EvidenceSummary
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "scalemass.fill")
+                    .font(.caption)
+                    .foregroundStyle(FCTheme.accentLight)
+                Text(Loc.t(.evidenceSummary))
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(FCTheme.textPrimary)
+                Spacer()
+                Text(String(format: Loc.t(.evidenceCountFmt), summary.totalSources ?? 0, summary.totalClaims ?? 0))
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(FCTheme.textMuted)
+            }
+            if summary.total > 0 {
+                GeometryReader { geo in
+                    HStack(spacing: 2) {
+                        bar(geo.size.width, CGFloat(summary.confirmingCount) / CGFloat(summary.total), Color(hex: 0x22C55E))
+                        bar(geo.size.width, CGFloat(summary.contradictingCount) / CGFloat(summary.total), Color(hex: 0xEF4444))
+                        bar(geo.size.width, CGFloat(summary.neutralCount) / CGFloat(summary.total), Color(hex: 0x64748B))
+                    }
+                }
+                .frame(height: 8)
+                .clipShape(Capsule())
+            }
+            HStack(spacing: 14) {
+                legend(FCTheme.green, "checkmark.circle.fill", String(format: Loc.t(.evidenceConfirmingFmt), summary.confirmingCount))
+                legend(FCTheme.red, "xmark.circle.fill", String(format: Loc.t(.evidenceContradictingFmt), summary.contradictingCount))
+                legend(FCTheme.textMuted, "info.circle.fill", String(format: Loc.t(.evidenceNeutralFmt), summary.neutralCount))
+            }
+            Text(Loc.t(.evidenceDisclaimer))
+                .font(.caption2)
+                .foregroundStyle(FCTheme.textMuted)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(FCTheme.bgSecondary.opacity(0.5))
+        .overlay(
+            RoundedRectangle(cornerRadius: FCTheme.radiusMD, style: .continuous)
+                .stroke(FCTheme.border, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusMD, style: .continuous))
+    }
+
+    private func bar(_ width: CGFloat, _ fraction: CGFloat, _ color: Color) -> some View {
+        Rectangle().fill(color).frame(width: max(0, width * fraction))
+    }
+
+    private func legend(_ color: Color, _ icon: String, _ text: String) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon).font(.caption2)
+            Text(text).font(.caption2.weight(.semibold))
+        }
+        .foregroundStyle(color)
+    }
+}
+
+// MARK: - MBFC card
+
+struct FCMbfcCard: View {
+    let result: MbfcResult
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "building.columns.fill")
+                    .font(.caption)
+                    .foregroundStyle(FCTheme.accentLight)
+                Text(Loc.t(.mbfcTitle))
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(FCTheme.textPrimary)
+                Spacer()
+                if let domain = result.domain {
+                    Text(domain)
+                        .font(.caption2)
+                        .foregroundStyle(FCTheme.textMuted)
+                        .lineLimit(1)
+                }
+            }
+            HStack(spacing: 10) {
+                rating(Loc.t(.mbfcBias), result.biasLabel)
+                rating(Loc.t(.mbfcFactual), result.factualLabel)
+                rating(Loc.t(.mbfcCredibility), result.credibilityLabel)
+            }
+            if result.isQuestionable == true {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill").font(.caption2)
+                    Text(Loc.t(.mbfcQuestionable)).font(.caption2.weight(.semibold))
+                }
+                .foregroundStyle(FCTheme.red)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background((result.isQuestionable == true ? FCTheme.red : FCTheme.accent).opacity(0.06))
+        .overlay(
+            RoundedRectangle(cornerRadius: FCTheme.radiusMD, style: .continuous)
+                .stroke((result.isQuestionable == true ? FCTheme.red : FCTheme.border).opacity(0.4), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusMD, style: .continuous))
+    }
+
+    private func rating(_ label: String, _ value: String?) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(label.uppercased())
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(FCTheme.textMuted)
+            Text(value ?? "—")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(FCTheme.textPrimary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// MARK: - Source assessment
+
+struct FCSourceAssessmentCard: View {
+    let assessment: SourceAssessment
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let transparency = assessment.transparency, !transparency.isEmpty {
+                Text(transparency.fcDisplay)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(FCTheme.textPrimary)
+            }
+            if let strengths = assessment.strengths, !strengths.isEmpty {
+                row(icon: "plus.circle.fill", color: FCTheme.green, text: strengths)
+            }
+            if let weaknesses = assessment.weaknesses, !weaknesses.isEmpty {
+                row(icon: "minus.circle.fill", color: FCTheme.red, text: weaknesses)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(FCTheme.bgSecondary.opacity(0.5))
+        .overlay(
+            RoundedRectangle(cornerRadius: FCTheme.radiusMD, style: .continuous)
+                .stroke(FCTheme.border, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusMD, style: .continuous))
+    }
+
+    private func row(icon: String, color: Color, text: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: icon).font(.caption).foregroundStyle(color).padding(.top, 1)
+            Text(text.fcDisplay).font(.system(size: 13)).foregroundStyle(FCTheme.textSecondary)
         }
     }
 }

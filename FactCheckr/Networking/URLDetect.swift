@@ -27,7 +27,31 @@ enum AnalyzeEndpoint {
         switch self {
         case .tiktok: return "TikTok"
         case .youtube: return "YouTube"
-        case .article: return "Artykuł"
+        case .article: return "Article"
+        }
+    }
+
+    var localizedLabel: String {
+        switch self {
+        case .tiktok: return "TikTok"
+        case .youtube: return "YouTube"
+        case .article: return Loc.t(.contentArticle)
+        }
+    }
+
+    var metaValue: String {
+        switch self {
+        case .tiktok: return "tiktok"
+        case .youtube: return "youtube"
+        case .article: return "article"
+        }
+    }
+
+    init(metaValue: String) {
+        switch metaValue {
+        case "tiktok": self = .tiktok
+        case "youtube": self = .youtube
+        default: self = .article
         }
     }
 }

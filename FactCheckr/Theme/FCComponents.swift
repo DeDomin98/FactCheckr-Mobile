@@ -2,22 +2,17 @@ import SwiftUI
 
 struct FCLogo: View {
     var size: CGFloat = 36
+    /// When true a subtle glow is drawn behind the shield (used on hero/auth screens).
+    var glow: Bool = false
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [FCTheme.accent, FCTheme.green],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: size, height: size)
-            Text("FC")
-                .font(.system(size: size * 0.38, weight: .black, design: .rounded))
-                .foregroundStyle(.white)
-        }
+        Image("AppLogo")
+            .resizable()
+            .interpolation(.high)
+            .aspectRatio(contentMode: .fit)
+            .frame(width: size, height: size)
+            .shadow(color: glow ? FCTheme.accent.opacity(0.45) : .clear,
+                    radius: glow ? size * 0.22 : 0)
     }
 }
 
@@ -176,7 +171,7 @@ struct FCEndpointTabs: View {
                     HStack(spacing: 6) {
                         Image(systemName: FCTheme.endpointIcon(endpoint))
                             .font(.caption)
-                        Text(endpoint.label)
+                        Text(endpoint.localizedLabel)
                             .font(.subheadline.weight(.medium))
                     }
                     .frame(maxWidth: .infinity)

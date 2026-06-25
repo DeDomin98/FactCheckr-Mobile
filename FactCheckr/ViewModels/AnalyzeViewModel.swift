@@ -43,6 +43,7 @@ final class AnalyzeViewModel: ObservableObject {
             let data = try await APIClient.shared.analyze(
                 path: endpoint.path,
                 url: url,
+                lang: Loc.code,
                 model: model,
                 idToken: idToken,
                 pow: pow
@@ -60,16 +61,16 @@ final class AnalyzeViewModel: ObservableObject {
             handleAPIError(apiError)
         } catch is DecodingError {
             markActiveStageError()
-            errorMessage = "Nieoczekiwany format odpowiedzi serwera. Spróbuj ponownie."
+            errorMessage = Loc.t(.errUnexpectedResponse)
         } catch let urlError as URLError {
             markActiveStageError()
             switch urlError.code {
             case .notConnectedToInternet, .networkConnectionLost:
-                errorMessage = "Brak połączenia z internetem."
+                errorMessage = Loc.t(.errNoInternet)
             case .timedOut:
-                errorMessage = "Przekroczono limit czasu. Spróbuj ponownie."
+                errorMessage = Loc.t(.errTimeout)
             default:
-                errorMessage = "Błąd sieci. Spróbuj ponownie."
+                errorMessage = Loc.t(.errNetwork)
             }
         } catch {
             markActiveStageError()

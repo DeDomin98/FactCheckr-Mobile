@@ -12,7 +12,19 @@
 				<string>factcheckr</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.factcheckr.ios.googlesignin</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.932783083251-899e7dabqq1qci9op61lfp0gh3i63qkl</string>
+			</array>
+		</dict>
 	</array>
+	<key>GIDClientID</key>
+	<string>932783083251-899e7dabqq1qci9op61lfp0gh3i63qkl.apps.googleusercontent.com</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>FactCheckr needs access to save shared report images to your photo library.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>UILaunchScreen</key>

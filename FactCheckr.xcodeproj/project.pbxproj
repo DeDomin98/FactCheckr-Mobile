@@ -63,6 +63,39 @@
 		F1000000000000000000003E /* FCAnimations.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000003E /* FCAnimations.swift */; };
 		F1000000000000000000003F /* FCAnalysisProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000003F /* FCAnalysisProgressView.swift */; };
 		F10000000000000000000040 /* FCAnalysisResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000040 /* FCAnalysisResultView.swift */; };
+		F10000000000000000000090 /* FCMediaPreviewHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000090 /* FCMediaPreviewHeader.swift */; };
+		F10000000000000000000091 /* FCTextFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000091 /* FCTextFormat.swift */; };
+		F10000000000000000000097 /* MediaPreviewCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000097 /* MediaPreviewCache.swift */; };
+		F10000000000000000000050 /* Assets.xcassets in ShareExtension Resources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000013 /* Assets.xcassets */; };
+		F10000000000000000000041 /* SocialSignIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000041 /* SocialSignIn.swift */; };
+		F10000000000000000000060 /* AppGroupTokenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000060 /* AppGroupTokenStore.swift */; };
+		F10000000000000000000061 /* BackgroundAnalysisStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000061 /* BackgroundAnalysisStore.swift */; };
+		F10000000000000000000062 /* BackgroundAnalysisService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000062 /* BackgroundAnalysisService.swift */; };
+		F10000000000000000000063 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000063 /* AppDelegate.swift */; };
+		F10000000000000000000070 /* AppGroupTokenStore.swift in ShareExtension Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000060 /* AppGroupTokenStore.swift */; };
+		F10000000000000000000071 /* BackgroundAnalysisStore.swift in ShareExtension Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000061 /* BackgroundAnalysisStore.swift */; };
+		F10000000000000000000072 /* BackgroundAnalysisService.swift in ShareExtension Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000062 /* BackgroundAnalysisService.swift */; };
+		F10000000000000000000073 /* AnalysisModels.swift in ShareExtension Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000007 /* AnalysisModels.swift */; };
+		F10000000000000000000074 /* AnalysisHistoryEntry.swift in ShareExtension Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000022 /* AnalysisHistoryEntry.swift */; };
+		F10000000000000000000075 /* PoW.swift in ShareExtension Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000003 /* PoW.swift */; };
+		F10000000000000000000076 /* APIConfig.swift in ShareExtension Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000002 /* APIConfig.swift */; };
+		F10000000000000000000080 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000080 /* Haptics.swift */; };
+		F10000000000000000000081 /* FavoritesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000081 /* FavoritesStore.swift */; };
+		F10000000000000000000082 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000082 /* Localization.swift */; };
+		F10000000000000000000083 /* LocKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000083 /* LocKey.swift */; };
+		F10000000000000000000084 /* ShareReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000084 /* ShareReportView.swift */; };
+		F10000000000000000000085 /* MediaPreviewHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000085 /* MediaPreviewHelper.swift */; };
+		F10000000000000000000086 /* SplashBootstrapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000086 /* SplashBootstrapView.swift */; };
+		F10000000000000000000087 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000087 /* NotificationService.swift */; };
+		F10000000000000000000088 /* ContextualTipStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000088 /* ContextualTipStore.swift */; };
+		F10000000000000000000094 /* NotificationService.swift in ShareExtension Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000087 /* NotificationService.swift */; };
+		F10000000000000000000095 /* MediaPreviewHelper.swift in ShareExtension Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000085 /* MediaPreviewHelper.swift */; };
+		F10000000000000000000096 /* FCTextFormat.swift in ShareExtension Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000091 /* FCTextFormat.swift */; };
+		F10000000000000000000098 /* MediaPreviewCache.swift in ShareExtension Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000097 /* MediaPreviewCache.swift */; };
+		F10000000000000000000092 /* Localization.swift in ShareExtension Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000082 /* Localization.swift */; };
+		F10000000000000000000093 /* LocKey.swift in ShareExtension Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000083 /* LocKey.swift */; };
+		F10000000000000000000051 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = F50000000000000000000011 /* GoogleSignIn */; };
+		F10000000000000000000052 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = F50000000000000000000012 /* GoogleSignInSwift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -120,6 +153,23 @@
 		F2000000000000000000003E /* FCAnimations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FCAnimations.swift; sourceTree = "<group>"; };
 		F2000000000000000000003F /* FCAnalysisProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FCAnalysisProgressView.swift; sourceTree = "<group>"; };
 		F20000000000000000000040 /* FCAnalysisResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FCAnalysisResultView.swift; sourceTree = "<group>"; };
+		F20000000000000000000090 /* FCMediaPreviewHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FCMediaPreviewHeader.swift; sourceTree = "<group>"; };
+		F20000000000000000000091 /* FCTextFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FCTextFormat.swift; sourceTree = "<group>"; };
+		F20000000000000000000097 /* MediaPreviewCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPreviewCache.swift; sourceTree = "<group>"; };
+		F20000000000000000000041 /* SocialSignIn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialSignIn.swift; sourceTree = "<group>"; };
+		F20000000000000000000060 /* AppGroupTokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroupTokenStore.swift; sourceTree = "<group>"; };
+		F20000000000000000000061 /* BackgroundAnalysisStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundAnalysisStore.swift; sourceTree = "<group>"; };
+		F20000000000000000000062 /* BackgroundAnalysisService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundAnalysisService.swift; sourceTree = "<group>"; };
+		F20000000000000000000063 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		F20000000000000000000080 /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
+		F20000000000000000000081 /* FavoritesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesStore.swift; sourceTree = "<group>"; };
+		F20000000000000000000082 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		F20000000000000000000083 /* LocKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocKey.swift; sourceTree = "<group>"; };
+		F20000000000000000000084 /* ShareReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareReportView.swift; sourceTree = "<group>"; };
+		F20000000000000000000085 /* MediaPreviewHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPreviewHelper.swift; sourceTree = "<group>"; };
+		F20000000000000000000086 /* SplashBootstrapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashBootstrapView.swift; sourceTree = "<group>"; };
+		F20000000000000000000087 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		F20000000000000000000088 /* ContextualTipStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextualTipStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,6 +179,8 @@
 			files = (
 				F10000000000000000000015 /* FirebaseAuth in Frameworks */,
 				F1000000000000000000002B /* FirebaseFirestore in Frameworks */,
+				F10000000000000000000051 /* GoogleSignIn in Frameworks */,
+				F10000000000000000000052 /* GoogleSignInSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -155,6 +207,7 @@
 			isa = PBXGroup;
 			children = (
 				F20000000000000000000001 /* FactCheckrApp.swift */,
+				F20000000000000000000063 /* AppDelegate.swift */,
 				F40000000000000000000004 /* Config */,
 				F40000000000000000000005 /* Networking */,
 				F40000000000000000000006 /* Models */,
@@ -163,6 +216,7 @@
 				F40000000000000000000008 /* ViewModels */,
 				F40000000000000000000009 /* Views */,
 				F4000000000000000000000B /* Theme */,
+				F40000000000000000000020 /* Localization */,
 				F4000000000000000000000D /* Shared */,
 				F4000000000000000000000A /* Resources */,
 				F2000000000000000000001D /* Info.plist */,
@@ -218,8 +272,10 @@
 			isa = PBXGroup;
 			children = (
 				F20000000000000000000023 /* AnalysisHistoryStore.swift */,
+				F20000000000000000000081 /* FavoritesStore.swift */,
 				F20000000000000000000024 /* UserProfileService.swift */,
 				F20000000000000000000037 /* OnboardingStore.swift */,
+				F20000000000000000000088 /* ContextualTipStore.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -228,6 +284,7 @@
 			isa = PBXGroup;
 			children = (
 				F20000000000000000000008 /* AuthManager.swift */,
+				F20000000000000000000041 /* SocialSignIn.swift */,
 			);
 			path = Auth;
 			sourceTree = "<group>";
@@ -260,6 +317,8 @@
 				F20000000000000000000038 /* OnboardingView.swift */,
 				F20000000000000000000039 /* AuthView.swift */,
 				F2000000000000000000003A /* HistoryView.swift */,
+				F20000000000000000000084 /* ShareReportView.swift */,
+				F20000000000000000000086 /* SplashBootstrapView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -276,13 +335,24 @@
 			isa = PBXGroup;
 			children = (
 				F20000000000000000000017 /* FCTheme.swift */,
+				F20000000000000000000080 /* Haptics.swift */,
 				F20000000000000000000018 /* FCComponents.swift */,
 				F20000000000000000000026 /* FCDashboardComponents.swift */,
 				F2000000000000000000003E /* FCAnimations.swift */,
 				F2000000000000000000003F /* FCAnalysisProgressView.swift */,
 				F20000000000000000000040 /* FCAnalysisResultView.swift */,
+				F20000000000000000000090 /* FCMediaPreviewHeader.swift */,
 			);
 			path = Theme;
+			sourceTree = "<group>";
+		};
+		F40000000000000000000020 /* Localization */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000082 /* Localization.swift */,
+				F20000000000000000000083 /* LocKey.swift */,
+			);
+			path = Localization;
 			sourceTree = "<group>";
 		};
 		F4000000000000000000000D /* Shared */ = {
@@ -292,6 +362,13 @@
 				F2000000000000000000002C /* AppGroupConfig.swift */,
 				F2000000000000000000001B /* ShareURLExtractor.swift */,
 				F2000000000000000000001C /* ShareLinkHandler.swift */,
+				F20000000000000000000060 /* AppGroupTokenStore.swift */,
+				F20000000000000000000061 /* BackgroundAnalysisStore.swift */,
+				F20000000000000000000062 /* BackgroundAnalysisService.swift */,
+				F20000000000000000000085 /* MediaPreviewHelper.swift */,
+				F20000000000000000000097 /* MediaPreviewCache.swift */,
+				F20000000000000000000091 /* FCTextFormat.swift */,
+				F20000000000000000000087 /* NotificationService.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -337,6 +414,8 @@
 			packageProductDependencies = (
 				F50000000000000000000002 /* FirebaseAuth */,
 				F50000000000000000000003 /* FirebaseFirestore */,
+				F50000000000000000000011 /* GoogleSignIn */,
+				F50000000000000000000012 /* GoogleSignInSwift */,
 			);
 			productName = FactCheckr;
 			productReference = F20000000000000000000015 /* FactCheckr.app */;
@@ -411,6 +490,7 @@
 			mainGroup = F40000000000000000000001;
 			packageReferences = (
 				F50000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				F50000000000000000000010 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			productRefGroup = F40000000000000000000003 /* Products */;
 			projectDirPath = "";
@@ -437,6 +517,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F10000000000000000000050 /* Assets.xcassets in ShareExtension Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -492,6 +573,23 @@
 				F1000000000000000000003E /* FCAnimations.swift in Sources */,
 				F1000000000000000000003F /* FCAnalysisProgressView.swift in Sources */,
 				F10000000000000000000040 /* FCAnalysisResultView.swift in Sources */,
+				F10000000000000000000090 /* FCMediaPreviewHeader.swift in Sources */,
+				F10000000000000000000091 /* FCTextFormat.swift in Sources */,
+				F10000000000000000000097 /* MediaPreviewCache.swift in Sources */,
+				F10000000000000000000041 /* SocialSignIn.swift in Sources */,
+				F10000000000000000000060 /* AppGroupTokenStore.swift in Sources */,
+				F10000000000000000000061 /* BackgroundAnalysisStore.swift in Sources */,
+				F10000000000000000000062 /* BackgroundAnalysisService.swift in Sources */,
+				F10000000000000000000063 /* AppDelegate.swift in Sources */,
+				F10000000000000000000080 /* Haptics.swift in Sources */,
+				F10000000000000000000081 /* FavoritesStore.swift in Sources */,
+				F10000000000000000000082 /* Localization.swift in Sources */,
+				F10000000000000000000083 /* LocKey.swift in Sources */,
+				F10000000000000000000084 /* ShareReportView.swift in Sources */,
+				F10000000000000000000085 /* MediaPreviewHelper.swift in Sources */,
+				F10000000000000000000086 /* SplashBootstrapView.swift in Sources */,
+				F10000000000000000000087 /* NotificationService.swift in Sources */,
+				F10000000000000000000088 /* ContextualTipStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -504,6 +602,19 @@
 				F10000000000000000000035 /* AppGroupConfig.swift in ShareExtension Sources */,
 				F10000000000000000000020 /* ShareURLExtractor.swift in ShareExtension Sources */,
 				F10000000000000000000021 /* URLDetect.swift in ShareExtension Sources */,
+				F10000000000000000000070 /* AppGroupTokenStore.swift in ShareExtension Sources */,
+				F10000000000000000000071 /* BackgroundAnalysisStore.swift in ShareExtension Sources */,
+				F10000000000000000000072 /* BackgroundAnalysisService.swift in ShareExtension Sources */,
+				F10000000000000000000073 /* AnalysisModels.swift in ShareExtension Sources */,
+				F10000000000000000000074 /* AnalysisHistoryEntry.swift in ShareExtension Sources */,
+				F10000000000000000000075 /* PoW.swift in ShareExtension Sources */,
+				F10000000000000000000076 /* APIConfig.swift in ShareExtension Sources */,
+				F10000000000000000000092 /* Localization.swift in ShareExtension Sources */,
+				F10000000000000000000093 /* LocKey.swift in ShareExtension Sources */,
+				F10000000000000000000094 /* NotificationService.swift in ShareExtension Sources */,
+				F10000000000000000000095 /* MediaPreviewHelper.swift in ShareExtension Sources */,
+				F10000000000000000000096 /* FCTextFormat.swift in ShareExtension Sources */,
+				F10000000000000000000098 /* MediaPreviewCache.swift in ShareExtension Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -565,7 +676,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = FactCheckr/FactCheckr.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = NNNUY4G9BY;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -594,7 +705,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = FactCheckr/FactCheckr.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = NNNUY4G9BY;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -621,7 +732,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = FactCheckrShare/FactCheckrShare.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = NNNUY4G9BY;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FactCheckrShare/Info.plist;
@@ -648,7 +759,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = FactCheckrShare/FactCheckrShare.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = NNNUY4G9BY;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FactCheckrShare/Info.plist;
@@ -711,6 +822,14 @@
 				minimumVersion = 11.0.0;
 			};
 		};
+		F50000000000000000000010 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.1.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -723,6 +842,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = F50000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseFirestore;
+		};
+		F50000000000000000000011 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F50000000000000000000010 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		F50000000000000000000012 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F50000000000000000000010 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

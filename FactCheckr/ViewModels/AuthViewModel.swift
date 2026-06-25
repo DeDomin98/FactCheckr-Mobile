@@ -1,4 +1,6 @@
 import Foundation
+import AuthenticationServices
+import GoogleSignIn
 
 @MainActor
 final class AuthViewModel: ObservableObject {
@@ -6,8 +8,52 @@ final class AuthViewModel: ObservableObject {
     @Published var password = ""
     @Published var confirmPassword = ""
     @Published var isLoading = false
+    @Published var socialLoading: SocialProvider?
     @Published var errorMessage: String?
     @Published var successMessage: String?
+
+    enum SocialProvider { case apple, google }
+
+    func signInWithApple(authManager: AuthManager) async -> Bool {
+        errorMessage = nil
+        socialLoading = .apple
+        defer { socialLoading = nil }
+        do {
+            try await authManager.signInWithApple()
+            return true
+        } catch {
+            if !isCancellation(error) {
+                errorMessage = mapFirebaseError(error)
+            }
+            return false
+        }
+    }
+
+    func signInWithGoogle(authManager: AuthManager) async -> Bool {
+        errorMessage = nil
+        socialLoading = .google
+        defer { socialLoading = nil }
+        do {
+            try await authManager.signInWithGoogle()
+            return true
+        } catch {
+            if !isCancellation(error) {
+                errorMessage = mapFirebaseError(error)
+            }
+            return false
+        }
+    }
+
+    private func isCancellation(_ error: Error) -> Bool {
+        if let asError = error as? ASAuthorizationError, asError.code == .canceled {
+            return true
+        }
+        if let gidError = error as? GIDSignInError, gidError.code == .canceled {
+            return true
+        }
+        if case SocialAuthError.cancelled = error { return true }
+        return false
+    }
 
     func signIn(authManager: AuthManager) async -> Bool {
         guard validateEmailPassword() else { return false }

@@ -13,19 +13,19 @@ enum PipelineStageId: String, CaseIterable, Hashable {
     func label(endpoint: AnalyzeEndpoint, isVideoSecurityLabel: Bool = false) -> String {
         switch self {
         case .pow:
-            return isVideoSecurityLabel ? "Weryfikacja bezpieczeństwa" : "Rozwiązywanie zabezpieczenia"
+            return isVideoSecurityLabel ? Loc.t(.pipePowVideo) : Loc.t(.pipePow)
         case .scraping:
-            return "Pobieranie treści strony"
+            return Loc.t(.pipeScraping)
         case .transcribing:
-            return endpoint == .youtube ? "Pobieranie transkrypcji" : "Transkrypcja audio"
+            return endpoint == .youtube ? Loc.t(.pipeTranscribingYT) : Loc.t(.pipeTranscribingAudio)
         case .extracting:
-            return endpoint == .article ? "Wyodrębnianie twierdzeń" : "Ekstrakcja twierdzeń"
+            return endpoint == .article ? Loc.t(.pipeExtractArticle) : Loc.t(.pipeExtractVideo)
         case .researching:
-            return endpoint == .article ? "Weryfikacja w źródłach online" : "Weryfikacja faktów"
+            return endpoint == .article ? Loc.t(.pipeResearchArticle) : Loc.t(.pipeResearchVideo)
         case .judging:
-            return endpoint == .article ? "Ocena wiarygodności" : "Ocena końcowa"
+            return endpoint == .article ? Loc.t(.pipeJudgeArticle) : Loc.t(.pipeJudgeVideo)
         case .analyzing:
-            return "Analiza AI"
+            return Loc.t(.pipeAnalyzing)
         }
     }
 
@@ -106,13 +106,15 @@ enum ScoreLevel {
         }
     }
 
-    var videoLabel: String {
+    var localizedVideoLabel: String {
         switch self {
-        case .credible: return "Wiarygodne"
-        case .suspicious: return "Częściowo wiarygodne"
-        case .fake: return "Wątpliwe"
+        case .credible: return Loc.t(.scoreCredible)
+        case .suspicious: return Loc.t(.scorePartiallyCredible)
+        case .fake: return Loc.t(.scoreDoubtful)
         }
     }
+
+    var videoLabel: String { localizedVideoLabel }
 }
 
 extension PipelineStageTracker {

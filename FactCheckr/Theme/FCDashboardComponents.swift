@@ -46,7 +46,7 @@ struct FCAppNavBar: View {
                         .background(Color.white.opacity(0.05))
                         .clipShape(Circle())
                 }
-                .accessibilityLabel("Wyloguj")
+                .accessibilityLabel(Loc.t(.accessibilityLogout))
             }
         }
         .padding(.horizontal, 20)
@@ -74,13 +74,13 @@ struct FCWelcomeCard: View {
             )
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("Cześć, \(name)!")
+                Text(String(format: Loc.t(.welcomeNameFmt), name))
                     .font(FCTheme.heading(20))
                     .foregroundStyle(FCTheme.textPrimary)
                 HStack(spacing: 6) {
                     Image(systemName: "crown.fill")
                         .font(.caption2)
-                    Text("\(planLabel) Plan")
+                    Text(String(format: Loc.t(.planFmt), planLabel))
                         .font(.caption.weight(.semibold))
                 }
                 .foregroundStyle(FCTheme.accentLight)
@@ -253,6 +253,7 @@ struct FCTabBar: View {
         HStack(spacing: 0) {
             ForEach(AppTab.allCases, id: \.self) { tab in
                 Button {
+                    if selection != tab { Haptics.selection() }
                     withAnimation(.easeInOut(duration: 0.2)) { selection = tab }
                 } label: {
                     VStack(spacing: 4) {
@@ -270,10 +271,10 @@ struct FCTabBar: View {
         }
         .padding(.horizontal, 8)
         .padding(.top, 8)
-        .padding(.bottom, 4)
         .background(
             FCTheme.bgSecondary
                 .overlay(Rectangle().frame(height: 1).foregroundStyle(FCTheme.border), alignment: .top)
+                .ignoresSafeArea(edges: .bottom)
         )
     }
 }
@@ -409,6 +410,54 @@ struct FCQuickAction: View {
     }
 }
 
+struct FCTipBanner: View {
+    let icon: String
+    let tint: Color
+    let title: String
+    let message: String
+    var onDismiss: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(tint.opacity(0.15))
+                    .frame(width: 36, height: 36)
+                Image(systemName: icon)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(tint)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(FCTheme.textPrimary)
+                Text(message)
+                    .font(.caption)
+                    .foregroundStyle(FCTheme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 0)
+
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(FCTheme.textMuted)
+                    .padding(8)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(14)
+        .background(tint.opacity(0.08))
+        .overlay(
+            RoundedRectangle(cornerRadius: FCTheme.radiusMD, style: .continuous)
+                .stroke(tint.opacity(0.22), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusMD, style: .continuous))
+    }
+}
+
 struct FCEmailBanner: View {
     var onVerify: () -> Void
 
@@ -417,15 +466,15 @@ struct FCEmailBanner: View {
             Image(systemName: "envelope.badge.fill")
                 .foregroundStyle(Color(hex: 0xFFB347))
             VStack(alignment: .leading, spacing: 2) {
-                Text("Potwierdź e-mail")
+                Text(Loc.t(.confirmEmailTitle))
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(FCTheme.textPrimary)
-                Text("Analizy zablokowane do weryfikacji")
+                Text(Loc.t(.analysesLockedUntilVerify))
                     .font(.caption)
                     .foregroundStyle(FCTheme.textMuted)
             }
             Spacer()
-            Button("Weryfikuj", action: onVerify)
+            Button(Loc.t(.verify), action: onVerify)
                 .font(.caption.weight(.bold))
                 .foregroundStyle(Color(hex: 0xFFD099))
         }

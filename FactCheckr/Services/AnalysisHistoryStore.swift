@@ -60,6 +60,10 @@ final class AnalysisHistoryStore {
         UserDefaults.standard.removeObject(forKey: currentKey)
     }
 
+    func clearAll(uid: String?) {
+        UserDefaults.standard.removeObject(forKey: storageKey(for: uid))
+    }
+
     private func persist(_ items: [AnalysisHistoryEntry], uid: String?) {
         guard let data = try? JSONEncoder().encode(items) else { return }
         UserDefaults.standard.set(data, forKey: storageKey(for: uid))

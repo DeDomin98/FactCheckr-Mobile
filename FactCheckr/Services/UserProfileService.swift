@@ -74,6 +74,7 @@ final class UserProfileService {
             if let photoURL, !photoURL.isEmpty { newDoc["photoURL"] = photoURL }
 
             try await ref.setData(newDoc)
+            PostLoginTutorialStore.schedule(for: uid)
             return fallback
         } catch {
             return fallback
@@ -89,6 +90,25 @@ final class UserProfileService {
         } catch {
             return nil
         }
+    }
+
+    /// Deletes the Firestore user profile and analysis history. Requires security rules that allow the owner to delete their data.
+    func deleteAllUserData(uid: String) async throws {
+        guard isConfigured else { return }
+        let db = Firestore.firestore()
+        let analysesRef = db.collection("users").document(uid).collection("analyses")
+
+        while true {
+            let snap = try await analysesRef.limit(to: 100).getDocuments()
+            if snap.documents.isEmpty { break }
+            let batch = db.batch()
+            for doc in snap.documents {
+                batch.deleteDocument(doc.reference)
+            }
+            try await batch.commit()
+        }
+
+        try await db.collection("users").document(uid).delete()
     }
 
     func fetchRemoteHistory(uid: String, limit: Int = 50) async -> [AnalysisHistoryEntry] {
@@ -118,7 +138,7 @@ final class UserProfileService {
         let threatRaw = data["threatLevel"] as? String ?? ThreatLevel.from(score: score).rawValue
         let threat = ThreatLevel(rawValue: threatRaw) ?? .medium
 
-        let analysis = AnalysisResult(
+        let analysis = decodeAnalysisResult(from: report) ?? AnalysisResult(
             credibilityScore: report["credibilityScore"] as? Int,
             manipulationScore: report["manipulationScore"] as? Int,
             confidenceScore: report["confidenceScore"] as? Int,
@@ -134,19 +154,20 @@ final class UserProfileService {
             categories: report["categories"] as? [String],
             detectedLanguage: report["detectedLanguage"] as? String,
             contentType: nil,
-            scoreReasoning: nil,
+            scoreReasoning: report["scoreReasoning"] as? String,
             evidenceSummary: nil
         )
 
         let response = AnalysisResponse(
             success: true,
             url: sourceUrl,
-            transcript: nil,
-            transcriptLanguage: nil,
-            audioDuration: nil,
-            analysisTimeMs: nil,
-            cached: nil,
-            modelUsed: nil,
+            pageTitle: data["title"] as? String,
+            transcript: report["transcript"] as? String,
+            transcriptLanguage: report["transcriptLanguage"] as? String,
+            audioDuration: report["audioDuration"] as? Double,
+            analysisTimeMs: report["analysisTimeMs"] as? Int,
+            cached: report["cached"] as? Bool,
+            modelUsed: report["modelUsed"] as? String,
             analysis: analysis
         )
 
@@ -165,5 +186,11 @@ final class UserProfileService {
             createdAt: ts,
             response: response
         )
+    }
+
+    private func decodeAnalysisResult(from report: [String: Any]) -> AnalysisResult? {
+        guard JSONSerialization.isValidJSONObject(report),
+              let data = try? JSONSerialization.data(withJSONObject: report) else { return nil }
+        return try? JSONDecoder().decode(AnalysisResult.self, from: data)
     }
 }

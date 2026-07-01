@@ -48,6 +48,10 @@ final class FavoritesStore {
         persist(load().filter { $0.id != id })
     }
 
+    func clearAll(uid: String?) {
+        UserDefaults.standard.removeObject(forKey: key(for: uid))
+    }
+
     private func persist(_ items: [AnalysisHistoryEntry]) {
         guard let data = try? JSONEncoder().encode(items) else { return }
         UserDefaults.standard.set(data, forKey: key(for: activeUID))

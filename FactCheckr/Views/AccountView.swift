@@ -7,6 +7,13 @@ struct AccountView: View {
     var onLogin: () -> Void
     var onVerifyEmail: () -> Void
     var onCheckLink: () -> Void
+    var onAccountDeleted: () -> Void = {}
+
+    @State private var showDeleteConfirm = false
+    @State private var showDeletePasswordSheet = false
+    @State private var deletePassword = ""
+    @State private var deleteError: String?
+    @State private var isDeletingAccount = false
 
     private var profile: UserProfile? { viewModel.profile }
 
@@ -34,6 +41,38 @@ struct AccountView: View {
         .scrollDismissesKeyboard(.interactively)
         .refreshable { await viewModel.refresh(authManager: authManager) }
         .task { await viewModel.refresh(authManager: authManager) }
+        .confirmationDialog(
+            Loc.t(.deleteAccountTitle),
+            isPresented: $showDeleteConfirm,
+            titleVisibility: .visible
+        ) {
+            Button(Loc.t(.deleteAccountConfirm), role: .destructive) {
+                beginDeleteFlow()
+            }
+            Button(Loc.t(.cancel), role: .cancel) {}
+        } message: {
+            Text(Loc.t(.deleteAccountMessage))
+        }
+        .sheet(isPresented: $showDeletePasswordSheet) {
+            deletePasswordSheet
+        }
+        .overlay {
+            if isDeletingAccount {
+                ZStack {
+                    Color.black.opacity(0.45).ignoresSafeArea()
+                    VStack(spacing: 14) {
+                        ProgressView()
+                            .tint(FCTheme.accentLight)
+                        Text(Loc.t(.deleteAccountDeleting))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(FCTheme.textPrimary)
+                    }
+                    .padding(24)
+                    .background(FCTheme.bgSecondary)
+                    .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusLG, style: .continuous))
+                }
+            }
+        }
     }
 
     @ViewBuilder
@@ -72,6 +111,89 @@ struct AccountView: View {
             try? authManager.signOut()
             Task { await viewModel.refresh(authManager: authManager) }
         }
+
+        deleteAccountSection
+    }
+
+    private var deleteAccountSection: some View {
+        FCCard {
+            VStack(alignment: .leading, spacing: 12) {
+                FCSectionTitle(icon: "exclamationmark.triangle.fill", title: Loc.t(.deleteAccount))
+                Text(Loc.t(.deleteAccountMessage))
+                    .font(.caption)
+                    .foregroundStyle(FCTheme.textMuted)
+
+                Button {
+                    showDeleteConfirm = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "trash.fill")
+                        Text(Loc.t(.deleteAccountConfirm))
+                            .fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .foregroundStyle(Color.red.opacity(0.95))
+                    .background(Color.red.opacity(0.1))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: FCTheme.radiusMD, style: .continuous)
+                            .stroke(Color.red.opacity(0.25), lineWidth: 1)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusMD, style: .continuous))
+                }
+                .disabled(isDeletingAccount)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var deletePasswordSheet: some View {
+        NavigationStack {
+            ZStack {
+                FCBackground()
+
+                VStack(spacing: 20) {
+                    Text(Loc.t(.deleteAccountPasswordPrompt))
+                        .font(.subheadline)
+                        .foregroundStyle(FCTheme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 8)
+
+                    FCTextField(
+                        placeholder: Loc.t(.deleteAccountPasswordPlaceholder),
+                        text: $deletePassword,
+                        isSecure: true
+                    )
+
+                    if let deleteError {
+                        Text(deleteError)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
+                    FCPrimaryButton(title: Loc.t(.deleteAccountConfirm), icon: "trash.fill") {
+                        Task { await performDelete(password: deletePassword) }
+                    }
+                    .disabled(deletePassword.isEmpty || isDeletingAccount)
+
+                    Spacer()
+                }
+                .padding(24)
+            }
+            .navigationTitle(Loc.t(.deleteAccount))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(Loc.t(.cancel)) {
+                        showDeletePasswordSheet = false
+                        deletePassword = ""
+                        deleteError = nil
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
     }
 
     private var languageSection: some View {
@@ -105,21 +227,25 @@ struct AccountView: View {
                 tokenPercent: locked ? 0 : viewModel.quotaPercent
             )
 
-            HStack(spacing: 12) {
-                FCDashStatCard(
-                    icon: "chart.line.uptrend.xyaxis",
-                    iconStyle: .analyses,
-                    label: Loc.t(.totalAnalysesLabel),
-                    value: "\(profile?.totalAnalyses ?? viewModel.history.count)",
-                    hint: Loc.t(.wholeHistory)
-                )
-                FCDashStatCard(
-                    icon: "crown.fill",
-                    iconStyle: .plan,
-                    label: Loc.t(.planLabelText),
-                    value: planLabel.capitalized,
-                    hint: profile?.isTester == true ? Loc.t(.testerAccess) : Loc.t(.earlyAccess)
-                )
+            Grid(horizontalSpacing: 12, verticalSpacing: 12) {
+                GridRow {
+                    FCDashStatCard(
+                        icon: "chart.line.uptrend.xyaxis",
+                        iconStyle: .analyses,
+                        label: Loc.t(.totalAnalysesLabel),
+                        value: "\(profile?.totalAnalyses ?? viewModel.history.count)",
+                        hint: Loc.t(.wholeHistory),
+                        compactPair: true
+                    )
+                    FCDashStatCard(
+                        icon: "crown.fill",
+                        iconStyle: .plan,
+                        label: Loc.t(.planLabelText),
+                        value: planLabel.capitalized,
+                        hint: profile?.isTester == true ? Loc.t(.testerAccess) : Loc.t(.earlyAccess),
+                        compactPair: true
+                    )
+                }
             }
         }
     }
@@ -204,6 +330,36 @@ struct AccountView: View {
                     .foregroundStyle(FCTheme.textPrimary)
             }
             Spacer()
+        }
+    }
+
+    private func beginDeleteFlow() {
+        deleteError = nil
+        if authManager.usesEmailPasswordProvider {
+            deletePassword = ""
+            showDeletePasswordSheet = true
+        } else {
+            Task { await performDelete(password: nil) }
+        }
+    }
+
+    @MainActor
+    private func performDelete(password: String?) async {
+        guard !isDeletingAccount else { return }
+        isDeletingAccount = true
+        deleteError = nil
+        defer { isDeletingAccount = false }
+
+        do {
+            try await authManager.deleteAccount(password: password)
+            showDeletePasswordSheet = false
+            deletePassword = ""
+            await viewModel.refresh(authManager: authManager)
+            Haptics.notify(.success)
+            onAccountDeleted()
+        } catch {
+            deleteError = error.localizedDescription
+            Haptics.notify(.error)
         }
     }
 }

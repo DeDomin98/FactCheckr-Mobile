@@ -1,24 +1,91 @@
 import SwiftUI
 
+private enum OnboardingLayout {
+    case bullets
+    case steps
+}
+
 private struct OnboardingPage: Identifiable {
     let id: Int
     let icon: String
     let tint: Color
     let titleKey: LocKey
     let subtitleKey: LocKey
+    let layout: OnboardingLayout
+    let itemKeys: [LocKey]
 }
 
 struct OnboardingView: View {
     var onContinue: () -> Void
 
     @State private var page = 0
-    @State private var appeared = false
+    @State private var heroAppeared = false
 
     private var pages: [OnboardingPage] {
         [
-            OnboardingPage(id: 0, icon: "sparkles", tint: FCTheme.accentLight, titleKey: .onboardingPage1Title, subtitleKey: .onboardingPage1Sub),
-            OnboardingPage(id: 1, icon: "play.rectangle.on.rectangle.fill", tint: FCTheme.youtube, titleKey: .onboardingPage2Title, subtitleKey: .onboardingPage2Sub),
-            OnboardingPage(id: 2, icon: "square.and.arrow.up.fill", tint: FCTheme.green, titleKey: .onboardingPage3Title, subtitleKey: .onboardingPage3Sub)
+            OnboardingPage(
+                id: 0,
+                icon: "checkmark.shield.fill",
+                tint: FCTheme.green,
+                titleKey: .onboardingPage1Title,
+                subtitleKey: .onboardingPage1Sub,
+                layout: .bullets,
+                itemKeys: [.onboardingPage1Feat1, .onboardingPage1Feat2, .onboardingPage1Feat3]
+            ),
+            OnboardingPage(
+                id: 1,
+                icon: "doc.text.magnifyingglass",
+                tint: Color(red: 0.45, green: 0.72, blue: 1),
+                titleKey: .onboardingPage2Title,
+                subtitleKey: .onboardingPage2Sub,
+                layout: .bullets,
+                itemKeys: [.onboardingPage2Feat1, .onboardingPage2Feat2, .onboardingPage2Feat3]
+            ),
+            OnboardingPage(
+                id: 2,
+                icon: "doc.on.clipboard.fill",
+                tint: FCTheme.accentLight,
+                titleKey: .onboardingPage3Title,
+                subtitleKey: .onboardingPage3Sub,
+                layout: .steps,
+                itemKeys: [.onboardingPasteStep1, .onboardingPasteStep2, .onboardingPasteStep3]
+            ),
+            OnboardingPage(
+                id: 3,
+                icon: "music.note.list",
+                tint: FCTheme.tiktok,
+                titleKey: .onboardingPage4Title,
+                subtitleKey: .onboardingPage4Sub,
+                layout: .steps,
+                itemKeys: [.onboardingTikTokStep1, .onboardingTikTokStep2, .onboardingTikTokStep3, .onboardingTikTokStep4]
+            ),
+            OnboardingPage(
+                id: 4,
+                icon: "play.rectangle.fill",
+                tint: FCTheme.youtube,
+                titleKey: .onboardingPage5Title,
+                subtitleKey: .onboardingPage5Sub,
+                layout: .steps,
+                itemKeys: [.onboardingYTStep1, .onboardingYTStep2, .onboardingYTStep3, .onboardingYTStep4]
+            ),
+            OnboardingPage(
+                id: 5,
+                icon: "bell.badge.fill",
+                tint: FCTheme.green,
+                titleKey: .onboardingPage6Title,
+                subtitleKey: .onboardingPage6Sub,
+                layout: .steps,
+                itemKeys: [.onboardingBackgroundStep1, .onboardingBackgroundStep2, .onboardingBackgroundStep3, .onboardingBackgroundStep4]
+            ),
+            OnboardingPage(
+                id: 6,
+                icon: "person.crop.circle.badge.checkmark",
+                tint: FCTheme.orange,
+                titleKey: .onboardingPage7Title,
+                subtitleKey: .onboardingPage7Sub,
+                layout: .bullets,
+                itemKeys: [.onboardingPage7Feat1, .onboardingPage7Feat2, .onboardingPage7Feat3]
+            )
         ]
     }
 
@@ -27,19 +94,7 @@ struct OnboardingView: View {
             FCBackground()
 
             VStack(spacing: 0) {
-                HStack {
-                    Spacer()
-                    if page < pages.count - 1 {
-                        Button(Loc.t(.onboardingSkip)) {
-                            finish()
-                        }
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(FCTheme.textMuted)
-                    }
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 12)
-                .frame(height: 44)
+                headerBar
 
                 TabView(selection: $page) {
                     ForEach(pages) { item in
@@ -50,77 +105,208 @@ struct OnboardingView: View {
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .animation(.easeInOut(duration: 0.35), value: page)
 
-                HStack(spacing: 8) {
-                    ForEach(pages) { item in
-                        Capsule()
-                            .fill(item.id == page ? FCTheme.accentLight : Color.white.opacity(0.18))
-                            .frame(width: item.id == page ? 22 : 7, height: 7)
-                            .animation(.spring(response: 0.35), value: page)
-                    }
-                }
-                .padding(.bottom, 24)
+                pageIndicator
+                    .padding(.bottom, 16)
 
                 FCPrimaryButton(
                     title: page == pages.count - 1 ? Loc.t(.getStarted) : Loc.t(.onboardingNext),
                     icon: page == pages.count - 1 ? "arrow.right" : "chevron.right"
                 ) {
-                    if page < pages.count - 1 {
-                        withAnimation { page += 1 }
-                        Haptics.selection()
-                    } else {
-                        finish()
-                    }
+                    advance()
                 }
                 .padding(.horizontal, 28)
-                .padding(.bottom, 40)
+                .padding(.bottom, 36)
             }
         }
         .onAppear {
-            withAnimation(.easeOut(duration: 0.5)) { appeared = true }
+            withAnimation(.spring(response: 0.55, dampingFraction: 0.82)) {
+                heroAppeared = true
+            }
+        }
+        .onChange(of: page) { _ in
+            heroAppeared = false
+            withAnimation(.spring(response: 0.55, dampingFraction: 0.82).delay(0.05)) {
+                heroAppeared = true
+            }
+        }
+    }
+
+    private var headerBar: some View {
+        HStack {
+            if page == 0 {
+                FCLogo(size: 32, glow: false)
+            } else {
+                Color.clear.frame(width: 32, height: 32)
+            }
+            Spacer()
+            Text(String(format: Loc.t(.onboardingStepFmt), page + 1) + " / \(pages.count)")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(FCTheme.textMuted)
+            Spacer()
+            if page < pages.count - 1 {
+                Button(Loc.t(.onboardingSkip)) {
+                    finish()
+                }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(FCTheme.textMuted)
+            } else {
+                Color.clear.frame(width: 44, height: 1)
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 12)
+        .frame(height: 52)
+    }
+
+    private var pageIndicator: some View {
+        HStack(spacing: 6) {
+            ForEach(pages) { item in
+                Capsule()
+                    .fill(item.id == page ? FCTheme.accentLight : Color.white.opacity(0.18))
+                    .frame(width: item.id == page ? 20 : 6, height: 6)
+                    .animation(.spring(response: 0.35), value: page)
+            }
         }
     }
 
     private func pageContent(_ item: OnboardingPage) -> some View {
-        VStack(spacing: 28) {
-            Spacer(minLength: 12)
-
-            ZStack {
-                Circle()
-                    .fill(item.tint.opacity(0.12))
-                    .frame(width: 120, height: 120)
-                Circle()
-                    .stroke(item.tint.opacity(0.28), lineWidth: 1)
-                    .frame(width: 120, height: 120)
-                Image(systemName: item.icon)
-                    .font(.system(size: 44, weight: .semibold))
-                    .foregroundStyle(item.tint)
-            }
-            .scaleEffect(appeared ? 1 : 0.85)
-            .opacity(appeared ? 1 : 0)
-
-            VStack(spacing: 14) {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 16) {
                 if item.id == 0 {
-                    FCLogo(size: 56, glow: true)
-                        .padding(.bottom, 4)
+                    FCLogo(size: 72, glow: true)
+                        .padding(.top, 8)
+                        .scaleEffect(heroAppeared ? 1 : 0.9)
+                        .opacity(heroAppeared ? 1 : 0)
+                } else {
+                    heroIcon(for: item)
                 }
 
-                Text(Loc.t(item.titleKey))
-                    .font(FCTheme.heading(26))
-                    .foregroundStyle(FCTheme.textPrimary)
-                    .multilineTextAlignment(.center)
+                VStack(spacing: 8) {
+                    Text(Loc.t(item.titleKey))
+                        .font(FCTheme.heading(24))
+                        .foregroundStyle(FCTheme.textPrimary)
+                        .multilineTextAlignment(.center)
 
-                Text(Loc.t(item.subtitleKey))
-                    .font(.body)
-                    .foregroundStyle(FCTheme.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(5)
-                    .padding(.horizontal, 12)
+                    Text(Loc.t(item.subtitleKey))
+                        .font(.subheadline)
+                        .foregroundStyle(FCTheme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(3)
+                }
+                .padding(.horizontal, 4)
+
+                switch item.layout {
+                case .bullets:
+                    bulletCard(for: item)
+                case .steps:
+                    stepsCard(for: item)
+                }
             }
-            .padding(.horizontal, 20)
-            .offset(y: appeared ? 0 : 18)
-            .opacity(appeared ? 1 : 0)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 12)
+        }
+    }
 
-            Spacer()
+    private func heroIcon(for item: OnboardingPage) -> some View {
+        ZStack {
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [item.tint.opacity(0.22), item.tint.opacity(0.04)],
+                        center: .center,
+                        startRadius: 8,
+                        endRadius: 68
+                    )
+                )
+                .frame(width: 120, height: 120)
+
+            Circle()
+                .stroke(item.tint.opacity(0.35), lineWidth: 1.5)
+                .frame(width: 96, height: 96)
+
+            Image(systemName: item.icon)
+                .font(.system(size: 40, weight: .semibold))
+                .foregroundStyle(item.tint)
+        }
+        .scaleEffect(heroAppeared ? 1 : 0.88)
+        .opacity(heroAppeared ? 1 : 0)
+        .padding(.top, 4)
+    }
+
+    private func bulletCard(for item: OnboardingPage) -> some View {
+        VStack(spacing: 0) {
+            ForEach(Array(item.itemKeys.enumerated()), id: \.offset) { index, key in
+                if index > 0 {
+                    Divider()
+                        .overlay(FCTheme.border)
+                        .padding(.leading, 52)
+                }
+
+                HStack(alignment: .center, spacing: 14) {
+                    Image(systemName: "checkmark")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(item.tint)
+                        .frame(width: 28, height: 28)
+                        .background(item.tint.opacity(0.14))
+                        .clipShape(Circle())
+
+                    Text(Loc.t(key))
+                        .font(.subheadline)
+                        .foregroundStyle(FCTheme.textPrimary)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .staggeredAppear(index: index, appeared: heroAppeared)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .onboardingListCard()
+    }
+
+    private func stepsCard(for item: OnboardingPage) -> some View {
+        VStack(spacing: 0) {
+            ForEach(Array(item.itemKeys.enumerated()), id: \.offset) { index, key in
+                if index > 0 {
+                    Divider()
+                        .overlay(FCTheme.border)
+                        .padding(.leading, 52)
+                }
+
+                HStack(alignment: .top, spacing: 14) {
+                    Text("\(index + 1)")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 28, height: 28)
+                        .background(item.tint)
+                        .clipShape(Circle())
+                        .padding(.top, 1)
+
+                    Text(Loc.t(key))
+                        .font(.subheadline)
+                        .foregroundStyle(FCTheme.textPrimary)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 4)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .staggeredAppear(index: index, appeared: heroAppeared)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .onboardingListCard()
+    }
+
+    private func advance() {
+        if page < pages.count - 1 {
+            withAnimation { page += 1 }
+            Haptics.selection()
+        } else {
+            finish()
         }
     }
 
@@ -128,5 +314,22 @@ struct OnboardingView: View {
         Haptics.impact(.light)
         OnboardingStore.markSeen()
         onContinue()
+    }
+}
+
+private extension View {
+    func onboardingListCard() -> some View {
+        background(FCTheme.bgCard)
+            .overlay(
+                RoundedRectangle(cornerRadius: FCTheme.radiusMD, style: .continuous)
+                    .stroke(FCTheme.borderLight, lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusMD, style: .continuous))
+    }
+
+    func staggeredAppear(index: Int, appeared: Bool) -> some View {
+        opacity(appeared ? 1 : 0)
+            .offset(y: appeared ? 0 : 8)
+            .animation(.easeOut(duration: 0.32).delay(0.06 + Double(index) * 0.05), value: appeared)
     }
 }

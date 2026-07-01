@@ -19,8 +19,7 @@ struct ResultView: View {
         .navigationTitle(Loc.t(.resultTitle))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
-        .toolbarBackground(FCTheme.bgPrimary.opacity(0.98), for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
+        .fcFluidNavigationBar()
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button {
@@ -75,11 +74,17 @@ struct VerdictBadge: View {
     let category: VerdictCategory
     var compact: Bool = false
 
+    private var compactWidth: CGFloat { 76 }
+
     var body: some View {
         Text(category.localizedLabel)
             .font(compact ? .caption2.weight(.bold) : .subheadline.weight(.bold))
             .foregroundStyle(.white)
-            .padding(.horizontal, compact ? 8 : 14)
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
+            .multilineTextAlignment(.center)
+            .frame(width: compact ? compactWidth : nil)
+            .padding(.horizontal, compact ? 0 : 14)
             .padding(.vertical, compact ? 4 : 8)
             .background(category.color)
             .clipShape(Capsule())

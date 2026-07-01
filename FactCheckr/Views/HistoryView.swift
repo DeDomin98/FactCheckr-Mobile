@@ -197,17 +197,24 @@ struct HistoryView: View {
     }
 
     private func historyRow(_ entry: AnalysisHistoryEntry) -> some View {
-        HStack(spacing: 12) {
+        let endpoint = MediaPreviewHelper.endpoint(for: entry.sourceUrl)
+        return HStack(spacing: 12) {
             VerdictBadge(category: VerdictCategory.from(analysis: entry.response.analysis), compact: true)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(entry.title.fcDisplay)
+                Text(MediaPreviewHelper.displayTitle(for: entry).fcDisplay)
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(FCTheme.textPrimary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
-                HStack(spacing: 8) {
-                    Text(MediaPreviewHelper.endpoint(for: entry.sourceUrl).localizedLabel)
+                HStack(spacing: 6) {
+                    Image(systemName: FCTheme.endpointIcon(endpoint))
+                        .font(.caption2)
+                        .foregroundStyle(FCTheme.endpointColor(endpoint))
+                    Text(endpoint.localizedLabel)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(FCTheme.endpointColor(endpoint))
+                    Text("·")
                         .font(.caption2)
                         .foregroundStyle(FCTheme.textMuted)
                     Text(entry.createdAt, style: .date)

@@ -49,6 +49,7 @@ struct APIError: LocalizedError {
 struct AnalysisResponse: Codable {
     let success: Bool?
     let url: String?
+    let pageTitle: String?
     let transcript: String?
     let transcriptLanguage: String?
     let audioDuration: Double?

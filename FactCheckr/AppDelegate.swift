@@ -8,7 +8,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     ) -> Bool {
         BackgroundAnalysisService.shared.activate()
         UNUserNotificationCenter.current().delegate = self
-        NotificationService.requestAuthorization()
+        NotificationService.registerCategoriesIfNeeded()
         return true
     }
 

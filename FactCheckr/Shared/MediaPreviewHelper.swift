@@ -61,6 +61,7 @@ enum MediaPreviewHelper {
     static func displayTitle(for entry: AnalysisHistoryEntry, videoTitle: String? = nil) -> String {
         let candidates: [String?] = [
             videoTitle,
+            cachedPreview(for: entry.sourceUrl)?.title,
             entry.title,
             entry.response.analysis?.summary,
             entry.response.analysis?.verdict
@@ -70,7 +71,46 @@ enum MediaPreviewHelper {
                 return FCTextFormat.display(text)
             }
         }
-        return entry.sourceUrl
+        return fallbackTitle(for: entry.sourceUrl)
+    }
+
+    /// Title stored when saving a new history entry (prefers real media title over API placeholders).
+    static func historyDisplayTitle(sourceUrl: String, response: AnalysisResponse) -> String {
+        if let cached = cachedPreview(for: sourceUrl)?.title,
+           !isGenericMediaTitle(cached) {
+            return truncateTitle(FCTextFormat.display(cached))
+        }
+        if let summary = response.analysis?.summary,
+           !summary.isEmpty, !isGenericMediaTitle(summary) {
+            return truncateTitle(FCTextFormat.display(summary))
+        }
+        if let verdict = response.analysis?.verdict,
+           !verdict.isEmpty, !isGenericMediaTitle(verdict) {
+            return truncateTitle(FCTextFormat.display(verdict))
+        }
+        return truncateTitle(fallbackTitle(for: sourceUrl))
+    }
+
+    static func fallbackTitle(for sourceUrl: String) -> String {
+        let endpoint = endpoint(for: sourceUrl)
+        switch endpoint {
+        case .tiktok:
+            if let author = tiktokAuthorFromURL(sourceUrl) {
+                return FCTextFormat.display("TikTok · \(author)")
+            }
+            return "TikTok"
+        case .youtube:
+            if let id = youtubeVideoID(from: sourceUrl) {
+                return "YouTube · \(id.prefix(11))"
+            }
+            return "YouTube"
+        case .article:
+            return hostLabel(for: sourceUrl)
+        }
+    }
+
+    private static func truncateTitle(_ text: String) -> String {
+        text.count > 80 ? String(text.prefix(80)) + "…" : text
     }
 
     static func isGenericMediaTitle(_ text: String) -> Bool {
@@ -86,6 +126,14 @@ enum MediaPreviewHelper {
         if generic.contains(normalized) { return true }
         if normalized.hasPrefix("yt ") && normalized.contains("video") { return true }
         if normalized.hasPrefix("tiktok ") && normalized.contains("video") { return true }
+        if normalized.range(
+            of: #"^(tiktok|youtube|yt)(\s+(video|short|clip))?\s*(\([a-z\s\-]+\))?$"#,
+            options: .regularExpression
+        ) != nil { return true }
+        if normalized.range(
+            of: #"(tiktok|youtube|yt).*(video|short).*\([a-z\s\-]+\)"#,
+            options: .regularExpression
+        ) != nil { return true }
         return false
     }
 
@@ -217,13 +265,26 @@ enum MediaPreviewHelper {
             let needsThumb = image == nil
             let needsMeta = needsTitle(title)
             if needsThumb || needsMeta {
-                if let link = await loadLinkPresentation(for: sourceUrl) {
-                    if needsThumb, let thumb = link.thumbnail { image = thumb }
-                    if needsMeta {
-                        title = resolvedMediaTitle(primary: link.title, secondary: nil, sourceUrl: sourceUrl) ?? title
-                    }
-                    author = link.authorName ?? author
+                async let oembedTask = loadNoEmbed(for: sourceUrl)
+                async let linkTask = loadLinkPresentation(for: sourceUrl)
+                let oembed = await oembedTask
+                let link = await linkTask
+
+                if needsMeta {
+                    title = resolvedMediaTitle(
+                        primary: oembed?.title,
+                        secondary: link?.title,
+                        sourceUrl: sourceUrl
+                    ) ?? title
                 }
+                if needsThumb {
+                    if let thumb = link?.thumbnail {
+                        image = thumb
+                    } else if let thumbURL = oembed?.thumbnailURL {
+                        image = await loadImage(from: thumbURL, sourceUrl: sourceUrl)
+                    }
+                }
+                author = oembed?.authorName ?? link?.authorName ?? author
             }
 
         case .article:

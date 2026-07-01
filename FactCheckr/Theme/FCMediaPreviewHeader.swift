@@ -6,12 +6,21 @@ struct FCMediaPreviewHeader: View {
     var entry: AnalysisHistoryEntry? = nil
     var compact: Bool = false
 
+    @Environment(\.openURL) private var openURL
     @State private var thumbnail: UIImage?
     @State private var mediaTitle: String?
     @State private var authorName: String?
 
     private var endpoint: AnalyzeEndpoint { MediaPreviewHelper.endpoint(for: sourceUrl) }
     private var isVideo: Bool { endpoint != .article }
+
+    private var sourceLink: URL? {
+        let trimmed = sourceUrl.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url = URL(string: trimmed),
+              let scheme = url.scheme?.lowercased(),
+              scheme == "http" || scheme == "https" else { return nil }
+        return url
+    }
 
     init(sourceUrl: String, entry: AnalysisHistoryEntry? = nil, compact: Bool = false) {
         self.sourceUrl = sourceUrl
@@ -67,11 +76,10 @@ struct FCMediaPreviewHeader: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 metaRow
-                titleBlock
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(FCTheme.textPrimary)
-                    .lineLimit(3)
-                    .multilineTextAlignment(.leading)
+                tappableTitle(
+                    font: .system(size: 14, weight: .semibold),
+                    lineLimit: 3
+                )
                 if displayTitle != nil, let authorLine {
                     Text(authorLine)
                         .font(.caption)
@@ -87,21 +95,19 @@ struct FCMediaPreviewHeader: View {
             metaRow
 
             if isVideo, displayTitle != nil {
-                Text(displayTitle!)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(FCTheme.textPrimary)
-                    .lineLimit(3)
-                    .multilineTextAlignment(.leading)
+                tappableTitle(
+                    font: .system(size: 16, weight: .bold),
+                    lineLimit: 3
+                )
             }
 
             thumbnailView(height: isVideo ? 156 : 132, cornerRadius: 14)
 
-            if !isVideo, let displayTitle {
-                Text(displayTitle)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(FCTheme.textPrimary)
-                    .lineLimit(3)
-                    .multilineTextAlignment(.leading)
+            if !isVideo, displayTitle != nil {
+                tappableTitle(
+                    font: .system(size: 15, weight: .bold),
+                    lineLimit: 3
+                )
             }
 
             if let authorLine {
@@ -139,8 +145,49 @@ struct FCMediaPreviewHeader: View {
         return authorName.fcDisplay
     }
 
+    @ViewBuilder
+    private func tappableTitle(font: Font, lineLimit: Int) -> some View {
+        if sourceLink != nil {
+            Button(action: openSourceLink) {
+                titleBlock
+                    .font(font)
+                    .foregroundStyle(FCTheme.textPrimary)
+                    .lineLimit(lineLimit)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Loc.t(.openSourceMaterial))
+        } else {
+            titleBlock
+                .font(font)
+                .foregroundStyle(FCTheme.textPrimary)
+                .lineLimit(lineLimit)
+                .multilineTextAlignment(.leading)
+        }
+    }
+
+    private func openSourceLink() {
+        guard let sourceLink else { return }
+        Haptics.impact(.light)
+        openURL(sourceLink)
+    }
+
+    @ViewBuilder
     private func thumbnailView(height: CGFloat, cornerRadius: CGFloat) -> some View {
-        ZStack {
+        if sourceLink != nil {
+            Button(action: openSourceLink) {
+                thumbnailImage(height: height, cornerRadius: cornerRadius)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Loc.t(.openSourceMaterial))
+        } else {
+            thumbnailImage(height: height, cornerRadius: cornerRadius)
+        }
+    }
+
+    private func thumbnailImage(height: CGFloat, cornerRadius: CGFloat) -> some View {
+        ZStack(alignment: .bottomTrailing) {
             Group {
                 if let thumbnail {
                     Image(uiImage: thumbnail)
@@ -159,6 +206,16 @@ struct FCMediaPreviewHeader: View {
                     }
                 }
             }
+
+            if sourceLink != nil {
+                Image(systemName: "arrow.up.right.square.fill")
+                    .font(.system(size: compact ? 11 : 14, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(compact ? 5 : 7)
+                    .background(.black.opacity(0.5))
+                    .clipShape(Circle())
+                    .padding(compact ? 6 : 10)
+            }
         }
         .frame(maxWidth: .infinity)
         .frame(height: height)
@@ -167,6 +224,7 @@ struct FCMediaPreviewHeader: View {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .stroke(FCTheme.border, lineWidth: 1)
         )
+        .contentShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
     }
 
     private var headerGradient: [Color] {

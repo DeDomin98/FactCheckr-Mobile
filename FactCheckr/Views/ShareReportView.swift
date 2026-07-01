@@ -53,61 +53,70 @@ struct ShareReportCardView: View {
     }
 
     private var mediaHeader: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 6) {
-                platformBadge
-                Text(MediaPreviewHelper.hostLabel(for: entry.sourceUrl))
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.65))
-                    .lineLimit(1)
-                Spacer(minLength: 0)
-            }
+        HStack(alignment: .top, spacing: 14) {
+            shareThumbnail(size: 92)
 
-            if isVideo {
-                Text(title)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(.white)
-                    .lineLimit(3)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            ZStack {
-                Group {
-                    if let thumbnail {
-                        Image(uiImage: thumbnail)
-                            .resizable()
-                            .scaledToFill()
-                    } else {
-                        LinearGradient(
-                            colors: headerGradient,
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                        .overlay {
-                            Image(systemName: endpoint == .article ? "doc.text.fill" : "play.rectangle.fill")
-                                .font(.system(size: 44, weight: .semibold))
-                                .foregroundStyle(.white.opacity(0.35))
-                        }
-                    }
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 6) {
+                    platformBadge
+                    Text(MediaPreviewHelper.hostLabel(for: entry.sourceUrl))
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.65))
+                        .lineLimit(1)
                 }
-            }
-            .frame(height: isVideo ? 156 : 132)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(.white.opacity(0.1), lineWidth: 1)
-            )
 
-            if !isVideo {
                 Text(title)
                     .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.92))
-                    .lineLimit(2)
+                    .foregroundStyle(.white)
+                    .lineLimit(4)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(16)
         .background(Color.white.opacity(0.03))
+    }
+
+    private func shareThumbnail(size: CGFloat) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: headerGradient,
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+            if let thumbnail {
+                Image(uiImage: thumbnail)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: size, height: size)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            } else {
+                Image(systemName: endpoint == .article ? "doc.text.fill" : "play.rectangle.fill")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.35))
+            }
+
+            if isVideo {
+                Circle()
+                    .fill(.black.opacity(0.45))
+                    .frame(width: 30, height: 30)
+                    .overlay {
+                        Image(systemName: "play.fill")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(.white)
+                            .offset(x: 1)
+                    }
+            }
+        }
+        .frame(width: size, height: size)
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(.white.opacity(0.12), lineWidth: 1)
+        )
     }
 
     private var platformBadge: some View {
@@ -228,7 +237,7 @@ enum ShareReportPDFBuilder {
         let title = MediaPreviewHelper.displayTitle(for: entry, videoTitle: videoTitle)
         let endpoint = MediaPreviewHelper.endpoint(for: entry.sourceUrl)
 
-        let pageRect = CGRect(x: 0, y: 0, width: 595, height: 842) // A4
+        let pageRect = CGRect(x: 0, y: 0, width: 595, height: 842)
         let margin: CGFloat = 44
         let contentWidth = pageRect.width - margin * 2
         let renderer = UIGraphicsPDFRenderer(bounds: pageRect)
@@ -237,45 +246,52 @@ enum ShareReportPDFBuilder {
             var y = margin
 
             func newPageIfNeeded(_ needed: CGFloat) {
-                if y + needed > pageRect.height - margin {
+                if y + needed > pageRect.height - margin - 28 {
+                    drawFooter(on: pageRect)
                     context.beginPage()
                     y = margin
                 }
             }
 
-            func drawTitle(_ text: String, size: CGFloat = 18) {
+            func drawTitle(_ text: String, size: CGFloat = 18, color: UIColor = .black) {
                 newPageIfNeeded(size + 12)
                 let attrs: [NSAttributedString.Key: Any] = [
                     .font: UIFont.systemFont(ofSize: size, weight: .bold),
-                    .foregroundColor: UIColor.black
+                    .foregroundColor: color
                 ]
-                let rect = CGRect(x: margin, y: y, width: contentWidth, height: 9999)
-                let h = text.boundingRect(
-                    with: CGSize(width: contentWidth, height: .greatestFiniteMagnitude),
-                    options: [.usesLineFragmentOrigin, .usesFontLeading],
-                    attributes: attrs,
-                    context: nil
-                ).height
-                text.draw(in: CGRect(x: margin, y: y, width: contentWidth, height: ceil(h)), withAttributes: attrs)
-                y += ceil(h) + 10
+                let h = textHeight(text, width: contentWidth, attrs: attrs)
+                text.draw(in: CGRect(x: margin, y: y, width: contentWidth, height: h), withAttributes: attrs)
+                y += h + 10
+            }
+
+            func drawBody(_ content: String, size: CGFloat = 11, color: UIColor = .darkGray) {
+                guard !content.isEmpty else { return }
+                newPageIfNeeded(40)
+                let attrs: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: size),
+                    .foregroundColor: color
+                ]
+                let h = textHeight(content, width: contentWidth, attrs: attrs)
+                content.draw(in: CGRect(x: margin, y: y, width: contentWidth, height: h), withAttributes: attrs)
+                y += h + 14
             }
 
             func drawSection(_ heading: String, content: String) {
                 guard !content.isEmpty else { return }
                 drawTitle(heading, size: 14)
-                newPageIfNeeded(40)
+                drawBody(content)
+            }
+
+            func drawFooter(on rect: CGRect) {
+                let footer = Loc.t(.sharePDFFooter)
                 let attrs: [NSAttributedString.Key: Any] = [
-                    .font: UIFont.systemFont(ofSize: 11),
-                    .foregroundColor: UIColor.darkGray
+                    .font: UIFont.systemFont(ofSize: 9),
+                    .foregroundColor: UIColor.gray
                 ]
-                let h = content.boundingRect(
-                    with: CGSize(width: contentWidth, height: .greatestFiniteMagnitude),
-                    options: [.usesLineFragmentOrigin, .usesFontLeading],
-                    attributes: attrs,
-                    context: nil
-                ).height
-                content.draw(in: CGRect(x: margin, y: y, width: contentWidth, height: ceil(h)), withAttributes: attrs)
-                y += ceil(h) + 16
+                footer.draw(
+                    in: CGRect(x: margin, y: rect.height - margin - 12, width: contentWidth, height: 16),
+                    withAttributes: attrs
+                )
             }
 
             context.beginPage()
@@ -284,36 +300,46 @@ enum ShareReportPDFBuilder {
             let headerRect = CGRect(x: 0, y: 0, width: pageRect.width, height: 72)
             UIColor(red: 0.08, green: 0.08, blue: 0.12, alpha: 1).setFill()
             UIBezierPath(rect: headerRect).fill()
-            let brand = AppMetadata.displayName
-            let brandAttrs: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 20, weight: .heavy),
-                .foregroundColor: UIColor.white
-            ]
-            brand.draw(at: CGPoint(x: margin, y: 24), withAttributes: brandAttrs)
+            AppMetadata.displayName.draw(
+                at: CGPoint(x: margin, y: 24),
+                withAttributes: [
+                    .font: UIFont.systemFont(ofSize: 20, weight: .heavy),
+                    .foregroundColor: UIColor.white
+                ]
+            )
             let dateStr = DateFormatter.localizedString(from: entry.createdAt, dateStyle: .medium, timeStyle: .short)
-            let dateAttrs: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 10),
-                .foregroundColor: UIColor.white.withAlphaComponent(0.7)
-            ]
-            dateStr.draw(at: CGPoint(x: pageRect.width - margin - 120, y: 28), withAttributes: dateAttrs)
+            dateStr.draw(
+                at: CGPoint(x: pageRect.width - margin - 130, y: 28),
+                withAttributes: [
+                    .font: UIFont.systemFont(ofSize: 10),
+                    .foregroundColor: UIColor.white.withAlphaComponent(0.7)
+                ]
+            )
             y = 88
 
             if let thumbnail {
-                let imgW = contentWidth
-                let imgH = min(180, imgW * 9 / 16)
-                newPageIfNeeded(imgH + 16)
-                thumbnail.draw(in: CGRect(x: margin, y: y, width: imgW, height: imgH))
-                y += imgH + 14
+                let box = CGRect(x: margin, y: y, width: 120, height: 120)
+                drawThumbnail(thumbnail, in: box, cornerRadius: 10)
+                y += 130
             }
 
             drawTitle(title, size: 20)
             drawSection(Loc.t(.shareSource), content: "\(endpoint.localizedLabel) · \(entry.sourceUrl)")
 
-            let scoreBlock = """
-            \(Loc.t(.shareCredibility)): \(score)/100
-            \(Loc.t(.shareVerdict)): \(category.localizedLabel)
-            """
-            drawSection(Loc.t(.shareScore), content: scoreBlock)
+            var scoreLines = [
+                "\(Loc.t(.shareCredibility)): \(score)/100",
+                "\(Loc.t(.shareVerdict)): \(category.localizedLabel)"
+            ]
+            if let manipulation = analysis?.manipulationScore {
+                scoreLines.append("\(Loc.t(.manipulation)): \(manipulation)/100")
+            }
+            if let confidence = analysis?.confidenceScore {
+                scoreLines.append("\(Loc.t(.confidence)): \(confidence)/100")
+            }
+            if let reasoning = analysis?.scoreReasoning, !reasoning.isEmpty {
+                scoreLines.append("\n\(reasoning)")
+            }
+            drawSection(Loc.t(.shareScore), content: scoreLines.joined(separator: "\n"))
 
             if let summary = analysis?.summary, !summary.isEmpty {
                 drawSection(Loc.t(.secSummary), content: summary)
@@ -321,19 +347,72 @@ enum ShareReportPDFBuilder {
             if let assessment = analysis?.assessmentText, !assessment.isEmpty {
                 drawSection(Loc.t(.secAnalysis), content: assessment)
             }
+            if let verdict = analysis?.verdict, !verdict.isEmpty {
+                drawSection(Loc.t(.shareVerdict), content: verdict)
+            }
+
+            if let es = analysis?.evidenceSummary, (es.totalSources ?? 0) > 0 {
+                let body = [
+                    String(format: Loc.t(.evidenceCountFmt), es.totalSources ?? 0, es.totalClaims ?? 0),
+                    String(format: Loc.t(.evidenceConfirmingFmt), es.confirmingCount),
+                    String(format: Loc.t(.evidenceContradictingFmt), es.contradictingCount),
+                    String(format: Loc.t(.evidenceNeutralFmt), es.neutralCount)
+                ].joined(separator: "\n")
+                drawSection(Loc.t(.evidenceSummary), content: body)
+            }
+
+            if let mbfc = analysis?.mbfcResult, mbfc.domain != nil {
+                var lines: [String] = []
+                if let domain = mbfc.domain { lines.append("\(Loc.t(.mbfcTitle)): \(domain)") }
+                if let bias = mbfc.biasLabel { lines.append("\(Loc.t(.mbfcBias)): \(bias)") }
+                if let factual = mbfc.factualLabel { lines.append("\(Loc.t(.mbfcFactual)): \(factual)") }
+                if let cred = mbfc.credibilityLabel { lines.append("\(Loc.t(.mbfcCredibility)): \(cred)") }
+                drawSection(Loc.t(.mbfcTitle), content: lines.joined(separator: "\n"))
+            }
+
             if let claims = analysis?.claims, !claims.isEmpty {
-                let body = claims.enumerated().map { idx, c in
-                    var line = "\(idx + 1). \(c.claim)"
-                    if let verdict = c.verdict ?? c.status { line += " [\(verdict)]" }
-                    if let reason = c.reason { line += "\n   \(reason)" }
-                    return line
+                let body = claims.enumerated().map { idx, claim in
+                    formatClaimForPDF(claim, index: idx + 1)
                 }.joined(separator: "\n\n")
                 drawSection(Loc.t(.secClaimsEvidence), content: body)
             }
+
             if let indicators = analysis?.indicators, !indicators.isEmpty {
-                let body = indicators.map { "• \($0.label): \($0.detail ?? "")" }.joined(separator: "\n")
+                let body = indicators.map { indicator in
+                    var line = "• \(indicator.label)"
+                    if let detail = indicator.detail, !detail.isEmpty { line += ": \(detail)" }
+                    if let status = indicator.status, !status.isEmpty { line += " [\(status)]" }
+                    return line
+                }.joined(separator: "\n")
                 drawSection(Loc.t(.secIndicators), content: body)
             }
+
+            let manipulationRows: [ManipulationSignal] = {
+                if let signals = analysis?.manipulationSignals, !signals.isEmpty { return signals }
+                return (analysis?.manipulationTechniques ?? []).map {
+                    ManipulationSignal(label: $0.technique, severity: $0.severity, detail: $0.evidence)
+                }
+            }()
+            if !manipulationRows.isEmpty {
+                let body = manipulationRows.map { signal in
+                    var line = "• \(signal.label)"
+                    if let severity = signal.severity, !severity.isEmpty { line += " (\(severity))" }
+                    if let detail = signal.detail, !detail.isEmpty { line += "\n  \(detail)" }
+                    return line
+                }.joined(separator: "\n")
+                drawSection(Loc.t(.secManipulation), content: body)
+            }
+
+            if let source = analysis?.sourceAssessment {
+                var lines: [String] = []
+                if let t = source.transparency, !t.isEmpty { lines.append(t) }
+                if let s = source.strengths, !s.isEmpty { lines.append("+\(s)") }
+                if let w = source.weaknesses, !w.isEmpty { lines.append("−\(w)") }
+                if !lines.isEmpty {
+                    drawSection(Loc.t(.secSourceAssessment), content: lines.joined(separator: "\n"))
+                }
+            }
+
             if let missing = analysis?.missingContext, !missing.isEmpty {
                 drawSection(Loc.t(.secMissingContext), content: missing.map { "• \($0)" }.joined(separator: "\n"))
             }
@@ -344,13 +423,11 @@ enum ShareReportPDFBuilder {
                 drawSection(Loc.t(.transcript), content: transcript)
             }
 
-            newPageIfNeeded(30)
-            let footer = Loc.t(.sharePDFFooter)
-            let footerAttrs: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 9),
-                .foregroundColor: UIColor.gray
-            ]
-            footer.draw(in: CGRect(x: margin, y: pageRect.height - margin - 20, width: contentWidth, height: 20), withAttributes: footerAttrs)
+            if let model = entry.response.modelUsed ?? analysis?.modelUsed {
+                drawBody("\(Loc.t(.badgePipeline)): \(model)", size: 10, color: .gray)
+            }
+
+            drawFooter(on: pageRect)
         }
 
         let fileName = "FactCheckr-\(entry.id.prefix(8)).pdf"
@@ -361,6 +438,61 @@ enum ShareReportPDFBuilder {
         } catch {
             return nil
         }
+    }
+
+    private static func formatClaimForPDF(_ claim: Claim, index: Int) -> String {
+        var lines = ["\(index). \(claim.claim)"]
+        if let verdict = claim.verdict ?? claim.status, !verdict.isEmpty {
+            lines.append("   \(Loc.t(.shareVerdict)): \(verdict)")
+        }
+        if let reason = claim.reason, !reason.isEmpty {
+            lines.append("   \(reason)")
+        }
+        if let research = claim.researchSummary, !research.isEmpty {
+            lines.append("   \(research)")
+        }
+        if let findings = claim.keyFindings, !findings.isEmpty {
+            lines.append(findings.map { "   • \($0)" }.joined(separator: "\n"))
+        }
+        if let breakdown = claim.sourceBreakdown, breakdown.total > 0 {
+            lines.append("   \(String(format: Loc.t(.evidenceConfirmingFmt), breakdown.confirmingCount)), \(String(format: Loc.t(.evidenceContradictingFmt), breakdown.contradictingCount))")
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    private static func textHeight(_ text: String, width: CGFloat, attrs: [NSAttributedString.Key: Any]) -> CGFloat {
+        ceil(text.boundingRect(
+            with: CGSize(width: width, height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading],
+            attributes: attrs,
+            context: nil
+        ).height)
+    }
+
+    private static func drawThumbnail(_ image: UIImage, in box: CGRect, cornerRadius: CGFloat) {
+        guard let ctx = UIGraphicsGetCurrentContext() else { return }
+        ctx.saveGState()
+        UIBezierPath(roundedRect: box, cornerRadius: cornerRadius).addClip()
+        UIColor(white: 0.94, alpha: 1).setFill()
+        ctx.fill(box)
+
+        let inset = box.insetBy(dx: 4, dy: 4)
+        let imageAspect = image.size.width / max(image.size.height, 1)
+        let boxAspect = inset.width / inset.height
+        var drawRect = inset
+        if imageAspect > boxAspect {
+            let height = inset.width / imageAspect
+            drawRect = CGRect(x: inset.minX, y: inset.midY - height / 2, width: inset.width, height: height)
+        } else {
+            let width = inset.height * imageAspect
+            drawRect = CGRect(x: inset.midX - width / 2, y: inset.minY, width: width, height: inset.height)
+        }
+        image.draw(in: drawRect)
+        ctx.restoreGState()
+
+        UIColor(white: 0.85, alpha: 1).setStroke()
+        UIBezierPath(roundedRect: box, cornerRadius: cornerRadius).lineWidth = 0.5
+        UIBezierPath(roundedRect: box, cornerRadius: cornerRadius).stroke()
     }
 }
 
@@ -377,6 +509,75 @@ enum ShareExportMode: String, CaseIterable, Identifiable {
         case .card: return Loc.t(.shareModeCard)
         case .pdf: return Loc.t(.shareModePDF)
         }
+    }
+}
+
+private struct ShareReportPDFPreview: View {
+    let entry: AnalysisHistoryEntry
+    var videoTitle: String?
+
+    private var analysis: AnalysisResult? { entry.response.analysis }
+
+    private var sections: [String] {
+        var items = [
+            Loc.t(.shareScore),
+            Loc.t(.secSummary),
+            Loc.t(.secAnalysis),
+            Loc.t(.secClaimsEvidence),
+            Loc.t(.secIndicators),
+            Loc.t(.secManipulation)
+        ]
+        if analysis?.evidenceSummary != nil { items.insert(Loc.t(.evidenceSummary), at: 3) }
+        if analysis?.mbfcResult?.domain != nil { items.append(Loc.t(.mbfcTitle)) }
+        if analysis?.sourceAssessment != nil { items.append(Loc.t(.secSourceAssessment)) }
+        if !(analysis?.missingContext ?? []).isEmpty { items.append(Loc.t(.secMissingContext)) }
+        if !(analysis?.correctedInfo ?? "").isEmpty { items.append(Loc.t(.secCorrection)) }
+        if !(entry.response.transcript ?? "").isEmpty { items.append(Loc.t(.transcript)) }
+        return items
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "doc.richtext.fill")
+                    .font(.system(size: 28))
+                    .foregroundStyle(FCTheme.accent)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(Loc.t(.sharePDFPreviewTitle))
+                        .font(.headline)
+                        .foregroundStyle(FCTheme.textPrimary)
+                    Text(MediaPreviewHelper.displayTitle(for: entry, videoTitle: videoTitle).fcDisplay)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(FCTheme.textSecondary)
+                        .lineLimit(2)
+                }
+            }
+
+            Text(Loc.t(.sharePDFPreviewSub))
+                .font(.caption)
+                .foregroundStyle(FCTheme.textMuted)
+
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(sections, id: \.self) { section in
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.caption)
+                            .foregroundStyle(FCTheme.green)
+                        Text(section)
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(FCTheme.textSecondary)
+                    }
+                }
+            }
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(FCTheme.bgCard)
+        .overlay(
+            RoundedRectangle(cornerRadius: FCTheme.radiusLG, style: .continuous)
+                .stroke(FCTheme.border, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusLG, style: .continuous))
     }
 }
 
@@ -496,25 +697,8 @@ struct ShareReportSheet: View {
                 .padding(.horizontal, 4)
                 .scaleEffect(0.98)
         } else {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(.white)
-                .frame(height: 360)
-                .overlay {
-                    VStack(spacing: 12) {
-                        Image(systemName: "doc.richtext.fill")
-                            .font(.system(size: 44))
-                            .foregroundStyle(FCTheme.accent)
-                        Text(Loc.t(.sharePDFPreviewTitle))
-                            .font(.headline)
-                            .foregroundStyle(.black)
-                        Text(Loc.t(.sharePDFPreviewSub))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 24)
-                    }
-                }
-                .shadow(color: .black.opacity(0.15), radius: 16, y: 8)
+            ShareReportPDFPreview(entry: entry, videoTitle: videoTitle)
+                .frame(minHeight: 360)
         }
     }
 

@@ -11,6 +11,10 @@ extension FCTheme {
         .system(size: 32, weight: .bold, design: .rounded)
     }
 
+    static func statValueCompact() -> Font {
+        .system(size: 26, weight: .bold, design: .rounded)
+    }
+
     static func labelCaps() -> Font {
         .system(size: 12, weight: .semibold)
     }
@@ -125,6 +129,8 @@ struct FCDashStatCard: View {
     let value: String
     var hint: String?
     var tokenPercent: Double?
+    /// When two cards sit side-by-side, keep equal height and balanced typography.
+    var compactPair: Bool = false
 
     enum DashIconStyle {
         case accent, analyses, plan, account
@@ -155,11 +161,16 @@ struct FCDashStatCard: View {
                     .font(FCTheme.labelCaps())
                     .foregroundStyle(FCTheme.textMuted)
                     .tracking(0.8)
+                    .lineLimit(compactPair ? 2 : 3)
+                    .minimumScaleFactor(0.75)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(minHeight: compactPair ? 30 : nil, alignment: .topLeading)
                 Text(value)
-                    .font(FCTheme.statValue())
+                    .font(compactPair ? FCTheme.statValueCompact() : FCTheme.statValue())
                     .foregroundStyle(FCTheme.textPrimary)
                     .lineLimit(2)
                     .minimumScaleFactor(0.7)
+                    .frame(minHeight: compactPair ? 36 : nil, alignment: .topLeading)
                 if let tokenPercent {
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
@@ -176,11 +187,17 @@ struct FCDashStatCard: View {
                     Text(hint)
                         .font(.caption)
                         .foregroundStyle(FCTheme.textMuted)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(minHeight: compactPair ? 32 : nil, alignment: .topLeading)
+                } else if compactPair {
+                    Color.clear.frame(height: 32)
                 }
             }
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(compactPair ? 14 : 18)
+        .frame(maxWidth: .infinity, maxHeight: compactPair ? .infinity : nil, alignment: .topLeading)
         .background(FCTheme.bgCard)
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -269,13 +286,28 @@ struct FCTabBar: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.top, 8)
-        .background(
-            FCTheme.bgSecondary
-                .overlay(Rectangle().frame(height: 1).foregroundStyle(FCTheme.border), alignment: .top)
-                .ignoresSafeArea(edges: .bottom)
-        )
+        .padding(.vertical, 10)
+        .fcFloatingTabBarBackground()
+    }
+}
+
+struct FCEndpointBadge: View {
+    let endpoint: AnalyzeEndpoint
+    var size: CGFloat = 44
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 10, style: .continuous)
+            .fill(FCTheme.endpointColor(endpoint).opacity(0.16))
+            .frame(width: size, height: size)
+            .overlay(
+                Image(systemName: FCTheme.endpointIcon(endpoint))
+                    .font(.system(size: size * 0.38, weight: .semibold))
+                    .foregroundStyle(FCTheme.endpointColor(endpoint))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(FCTheme.endpointColor(endpoint).opacity(0.28), lineWidth: 1)
+            )
     }
 }
 
@@ -303,13 +335,19 @@ struct FCHistoryRow: View {
                             .foregroundStyle(FCTheme.textPrimary)
                             .lineLimit(2)
                             .multilineTextAlignment(.leading)
-                        HStack(spacing: 8) {
-                            Text(entry.type)
+                        HStack(spacing: 6) {
+                            let endpoint = MediaPreviewHelper.endpoint(for: entry.sourceUrl)
+                            Image(systemName: FCTheme.endpointIcon(endpoint))
+                                .font(.caption2)
+                                .foregroundStyle(FCTheme.endpointColor(endpoint))
+                            Text(endpoint.localizedLabel)
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(FCTheme.endpointColor(endpoint))
                             Text("·")
                             Text(entry.createdAt.formatted(date: .abbreviated, time: .shortened))
+                                .font(.caption2)
+                                .foregroundStyle(FCTheme.textMuted)
                         }
-                        .font(.caption2)
-                        .foregroundStyle(FCTheme.textMuted)
                         if let verdict = entry.verdict {
                             Text(verdict)
                                 .font(.caption)
@@ -415,6 +453,8 @@ struct FCTipBanner: View {
     let tint: Color
     let title: String
     let message: String
+    var actionTitle: String? = nil
+    var onAction: (() -> Void)? = nil
     var onDismiss: () -> Void
 
     var body: some View {
@@ -428,14 +468,25 @@ struct FCTipBanner: View {
                     .foregroundStyle(tint)
             }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(FCTheme.textPrimary)
-                Text(message)
-                    .font(.caption)
-                    .foregroundStyle(FCTheme.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(FCTheme.textPrimary)
+                    Text(message)
+                        .font(.caption)
+                        .foregroundStyle(FCTheme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                if let actionTitle, let onAction {
+                    Button(action: onAction) {
+                        Text(actionTitle)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(tint)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
 
             Spacer(minLength: 0)

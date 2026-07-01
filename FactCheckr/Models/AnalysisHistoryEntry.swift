@@ -48,11 +48,7 @@ struct AnalysisHistoryEntry: Identifiable, Codable {
         overallScore = score
         threatLevel = ThreatLevel.from(score: score)
         verdict = response.analysis?.verdict
-        if let summary = response.analysis?.summary, !summary.isEmpty {
-            title = summary.count > 80 ? String(summary.prefix(80)) + "…" : summary
-        } else {
-            title = sourceUrl
-        }
+        title = MediaPreviewHelper.historyDisplayTitle(sourceUrl: sourceUrl, response: response)
         createdAt = Date()
         self.response = response
     }

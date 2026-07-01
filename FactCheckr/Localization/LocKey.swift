@@ -28,6 +28,9 @@ enum LocKey {
     case planLabelText, testerAccess, earlyAccess, yourAccount, verification
     case verified, pending, appVersion, joinFmt, loggedOutSub, loginRegister
     case checkWithoutAccount, privacy, privacyPolicy, privacyText, aboutApp, aboutText
+    case deleteAccount, deleteAccountTitle, deleteAccountMessage, deleteAccountConfirm
+    case deleteAccountPasswordPrompt, deleteAccountPasswordPlaceholder, deleteAccountReauth
+    case deleteAccountRemoteFailed, deleteAccountNotConfigured, deleteAccountDeleting
 
     // History
     case historySearchPlaceholder, filterFavorites, filterAll
@@ -43,12 +46,34 @@ enum LocKey {
     case onboardingPage1Title, onboardingPage1Sub
     case onboardingPage2Title, onboardingPage2Sub
     case onboardingPage3Title, onboardingPage3Sub
+    case onboardingPage4Title, onboardingPage4Sub
+    case onboardingPage5Title, onboardingPage5Sub
+    case onboardingPage6Title, onboardingPage6Sub
+    case onboardingPage7Title, onboardingPage7Sub
+    case onboardingPage1Feat1, onboardingPage1Feat2, onboardingPage1Feat3
+    case onboardingPage2Feat1, onboardingPage2Feat2, onboardingPage2Feat3
+    case onboardingPage7Feat1, onboardingPage7Feat2, onboardingPage7Feat3
+    case onboardingPasteStep1, onboardingPasteStep2, onboardingPasteStep3
+    case onboardingTikTokStep1, onboardingTikTokStep2, onboardingTikTokStep3, onboardingTikTokStep4
+    case onboardingYTStep1, onboardingYTStep2, onboardingYTStep3, onboardingYTStep4
+    case onboardingBackgroundStep1, onboardingBackgroundStep2, onboardingBackgroundStep3, onboardingBackgroundStep4
+    case onboardingStepFmt
+
+    // Post-login tutorial
+    case postLoginWelcomeTitle, postLoginWelcomeSub, postLoginWelcomeHint
+    case postLoginTokensBadge, postLoginTryDemo, postLoginPasteTitle, postLoginPasteSub
+    case postLoginPasteButton, postLoginPasteFreeHint, postLoginLinkReady
+    case postLoginDemoFreeTag, postLoginDemoArticleTeaser, postLoginAnalyzingTitle
+    case postLoginDemoBadge, postLoginDemoBadgeSub, postLoginFinishButton
+    case postLoginDemoStageScrape, postLoginDemoStageAnalyze, postLoginDemoStageVerdict
+
     case splashTagline, splashLoading, back
 
     // Result
     case resultTitle, checkAnother, shareButton
     case secAnalysis, secClaimsEvidence, secClaims, secSummary, secIndicators, secManipulation
-    case secSourceAssessment, secMissingContext, secCorrection
+    case secSourceAssessment, secMissingContext, secCorrection, secAllSources, secCategories
+    case keyFindingsLabel, scoreReasoningLabel, sourcesUsedLabel
     case badgeGrounding, badgePipeline
 
     // Share report
@@ -94,10 +119,17 @@ enum LocKey {
     case notifActionViewResult, notifActionOpenApp
 
     // Contextual tips
-    case tipHomeTitle, tipHomeMessage, tipHistoryTitle, tipHistoryMessage, tipShareTitle, tipShareMessage
+    case tipHomeTitle, tipHomeMessage, tipHistoryTitle, tipHistoryMessage
+    case tipShareFavoritesTitle, tipShareFavoritesMessage
+    case tipShareTitle, tipShareMessage
+    case tipClipboardTitle, tipClipboardMessage, tipClipboardAction
 
     // Share extension
+    case shareExtensionName
+    case openSourceMaterial
     case shareExtPassing, shareExtReadFail, shareExtNoUrl, shareExtStarting, shareExtBackgroundStarted, shareExtOpenApp
+    case shareExtNotLoggedIn, shareExtBackgroundFailed
+    case bgAnalysisInflightTitle, bgAnalysisInflightMessage
 
     var values: (pl: String, en: String) {
         switch self {
@@ -187,6 +219,19 @@ enum LocKey {
         case .aboutApp: return ("O aplikacji", "About")
         case .aboutText: return ("%@ — ochrona przed dezinformacją. Analizuj TikTok, YouTube i artykuły dzięki silnikowi AI.",
                                  "%@ — protection against disinformation. Analyze TikTok, YouTube and articles with an AI engine.")
+        case .deleteAccount: return ("Usuń konto", "Delete account")
+        case .deleteAccountTitle: return ("Usunąć konto na stałe?", "Delete account permanently?")
+        case .deleteAccountMessage: return ("Usuniemy Twoje konto, profil, historię analiz w chmurze i dane lokalne na tym urządzeniu. Tej operacji nie można cofnąć.",
+                                            "We'll delete your account, cloud profile, analysis history and local data on this device. This cannot be undone.")
+        case .deleteAccountConfirm: return ("Usuń konto", "Delete account")
+        case .deleteAccountPasswordPrompt: return ("Podaj hasło, aby potwierdzić usunięcie konta.", "Enter your password to confirm account deletion.")
+        case .deleteAccountPasswordPlaceholder: return ("Hasło", "Password")
+        case .deleteAccountReauth: return ("Ze względów bezpieczeństwa zaloguj się ponownie (wyloguj i zaloguj), a następnie spróbuj jeszcze raz.",
+                                           "For security, sign in again (log out and back in), then try deleting your account once more.")
+        case .deleteAccountRemoteFailed: return ("Nie udało się usunąć danych w chmurze. Sprawdź połączenie i spróbuj ponownie.",
+                                                  "Could not delete cloud data. Check your connection and try again.")
+        case .deleteAccountNotConfigured: return ("Usuwanie konta wymaga skonfigurowanego Firebase.", "Account deletion requires Firebase to be configured.")
+        case .deleteAccountDeleting: return ("Usuwanie konta…", "Deleting account…")
 
         // History
         case .historySearchPlaceholder: return ("Szukaj w historii…", "Search history…")
@@ -215,15 +260,79 @@ enum LocKey {
         case .getStarted: return ("Zaczynamy", "Get started")
         case .onboardingSkip: return ("Pomiń", "Skip")
         case .onboardingNext: return ("Dalej", "Next")
-        case .onboardingPage1Title: return ("Fact-check w kieszeni", "Fact-check in your pocket")
-        case .onboardingPage1Sub: return ("Sprawdzaj wiarygodność treści z TikToka, YouTube i artykułów dzięki analizie AI.",
-                                          "Check credibility of TikTok, YouTube and articles with AI analysis.")
-        case .onboardingPage2Title: return ("Wklej link i gotowe", "Paste a link, done")
-        case .onboardingPage2Sub: return ("Analiza w tle, historia zsynchronizowana z kontem i pełny raport z dowodami.",
-                                          "Background analysis, synced history and full evidence reports.")
-        case .onboardingPage3Title: return ("Udostępniaj werdykt", "Share your verdict")
-        case .onboardingPage3Sub: return ("Generuj kartę lub PDF i wysyłaj znajomym — z logo FactCheckr.",
-                                          "Generate a card or PDF and share with friends — branded with FactCheckr.")
+        case .onboardingPage1Title: return ("Nie wierz wszystkiemu z scrolla", "Don't trust everything you scroll")
+        case .onboardingPage1Sub: return ("Podejrzany film na TikToku albo YouTube? Wklej link albo udostępnij go do FactCheckr. Dostajesz werdykt i dowody, zamiast wierzyć na słowo.",
+                                          "Suspicious TikTok or YouTube video? Paste a link or share it to FactCheckr. You get a verdict and evidence, instead of taking someone's word for it.")
+        case .onboardingPage2Title: return ("Co dokładnie dostajesz?", "What do you actually get?")
+        case .onboardingPage2Sub: return ("Nie tylko etykietka „prawda/fałsz”. Pełny raport jak u dziennikarza, tylko w minutę.",
+                                          "Not just a true/false label. A full journalist-style report, in about a minute.")
+        case .onboardingPage3Title: return ("Sposób 1: wklej link", "Method 1: paste a link")
+        case .onboardingPage3Sub: return ("Masz już link w schowku? To najprostsza droga, trzy tapnięcia i masz wynik.",
+                                          "Already have a link copied? Easiest path, three taps and you have a result.")
+        case .onboardingPage4Title: return ("Sposób 2: Share z TikToka", "Method 2: Share from TikTok")
+        case .onboardingPage4Sub: return ("Bez kopiowania linku. TikTok, Udostępnij, FactCheckr. Reszta dzieje się sama.",
+                                          "No copying links. TikTok, Share, FactCheckr. The rest happens on its own.")
+        case .onboardingPage5Title: return ("To samo na YouTube", "Same thing on YouTube")
+        case .onboardingPage5Sub: return ("Identycznie prosto: Share pod filmem, wybierz FactCheckr, analiza startuje w tle.",
+                                          "Just as simple: Share under the video, pick FactCheckr, analysis starts in the background.")
+        case .onboardingPage6Title: return ("Analiza w tle, bez czekania", "Background analysis, no waiting")
+        case .onboardingPage6Sub: return ("Nie musisz siedzieć w appce. Wracasz do scrollowania, a my damy znać, gdy wynik będzie gotowy.",
+                                          "No need to sit in the app. Go back to scrolling, we'll notify you when the result is ready.")
+        case .onboardingPage7Title: return ("Załóż konto i zaczynamy", "Create an account and go")
+        case .onboardingPage7Sub: return ("Konto to historia sprawdzeń w chmurze i darmowe analizy na start. Możesz też sprawdzać bez logowania.",
+                                          "Account means synced history and free analyses to start. You can also check links without signing in.")
+        case .onboardingPage1Feat1: return ("TikTok, YouTube i artykuły z internetu", "TikTok, YouTube and web articles")
+        case .onboardingPage1Feat2: return ("Werdykt plus dowody, nie sama opinia", "Verdict plus evidence, not just an opinion")
+        case .onboardingPage1Feat3: return ("Po polsku i po angielsku", "In Polish and English")
+        case .onboardingPage2Feat1: return ("Ocena wiarygodności 0-100", "Credibility score 0-100")
+        case .onboardingPage2Feat2: return ("Twierdzenia z linkami do źródeł", "Claims with links to sources")
+        case .onboardingPage2Feat3: return ("Wykrywanie manipulacji i brakującego kontekstu", "Manipulation and missing context detection")
+        case .onboardingPage7Feat1: return ("5 darmowych analiz po rejestracji", "5 free analyses after sign-up")
+        case .onboardingPage7Feat2: return ("Historia wszystkich sprawdzeń na koncie", "Full check history on your account")
+        case .onboardingPage7Feat3: return ("Apple, Google lub e-mail, wybierz co lubisz", "Apple, Google or email, your choice")
+        case .onboardingPasteStep1: return ("Skopiuj link do filmu lub artykułu", "Copy the link to a video or article")
+        case .onboardingPasteStep2: return ("Otwórz FactCheckr i wklej link na ekranie głównym", "Open FactCheckr and paste the link on the home screen")
+        case .onboardingPasteStep3: return ("Tapnij „Analizuj”, za chwilę masz pełny raport", "Tap \"Analyze\", your full report arrives in a moment")
+        case .onboardingTikTokStep1: return ("Otwórz film, który chcesz sprawdzić", "Open the video you want to check")
+        case .onboardingTikTokStep2: return ("Tapnij Udostępnij (strzałka w prawo)", "Tap Share (arrow on the right)")
+        case .onboardingTikTokStep3: return ("Wybierz FactCheckr, przy pierwszym razie dodaj do Ulubionych", "Pick FactCheckr, on first use add it to Favorites")
+        case .onboardingTikTokStep4: return ("Wróć do TikToka, analiza ruszyła w tle", "Go back to TikTok, analysis is running in the background")
+        case .onboardingYTStep1: return ("Otwórz film na YouTube", "Open a video on YouTube")
+        case .onboardingYTStep2: return ("Tapnij Udostępnij pod odtwarzaczem", "Tap Share below the player")
+        case .onboardingYTStep3: return ("Wybierz FactCheckr z listy aplikacji", "Select FactCheckr from the app list")
+        case .onboardingYTStep4: return ("Możesz oglądać dalej, analiza idzie w tle", "Keep watching, analysis runs in the background")
+        case .onboardingBackgroundStep1: return ("Po Share nie musisz czekać w FactCheckr", "After Share you don't have to wait in FactCheckr")
+        case .onboardingBackgroundStep2: return ("Film jest sprawdzany cicho w tle", "The video is checked quietly in the background")
+        case .onboardingBackgroundStep3: return ("Dostaniesz powiadomienie: „Wynik gotowy”", "You'll get a notification: \"Result ready\"")
+        case .onboardingBackgroundStep4: return ("Tapnij powiadomienie, od razu widzisz raport", "Tap the notification, the report opens instantly")
+        case .onboardingStepFmt: return ("Krok %d", "Step %d")
+
+        case .postLoginWelcomeTitle: return ("Konto gotowe!", "You're all set!")
+        case .postLoginWelcomeSub: return ("Dziękujemy za dołączenie. Masz 5 darmowych analiz — wykorzystaj je na linki, które naprawdę Cię interesują.",
+                                             "Thanks for joining. You have 5 free analyses — use them on links you actually care about.")
+        case .postLoginWelcomeHint: return ("Na start pokażemy Ci krok po kroku, jak wkleić link i co zobaczysz w raporcie. Użyjemy prawdziwego artykułu z rp.pl.",
+                                             "First we'll walk you through pasting a link and what you'll see in the report, using a real rp.pl article.")
+        case .postLoginTokensBadge: return ("5 darmowych analiz na start", "5 free analyses to start")
+        case .postLoginTryDemo: return ("Wypróbuj na przykładzie", "Try the example")
+        case .postLoginPasteTitle: return ("Wklej link — tak jak na ekranie głównym", "Paste a link — just like on the home screen")
+        case .postLoginPasteSub: return ("Tapnij „Wklej przykład” poniżej. Potem „Analizuj” — dokładnie tak zrobisz z dowolnym artykułem lub filmem.",
+                                          "Tap \"Paste example\" below, then \"Analyze\" — the same flow works for any article or video.")
+        case .postLoginPasteButton: return ("Wklej przykładowy link", "Paste example link")
+        case .postLoginPasteFreeHint: return ("Ta analiza demo jest w 100% darmowa i nie odejmuje żadnego z Twoich 5 tokenów.",
+                                                 "This demo analysis is 100% free and does not use any of your 5 tokens.")
+        case .postLoginLinkReady: return ("Link w polu — gotowe do analizy", "Link in the field — ready to analyze")
+        case .postLoginDemoFreeTag: return ("0 tokenów", "0 tokens")
+        case .postLoginDemoArticleTeaser: return ("Wyrok Sądu Najwyższego USA w sprawie obywatelstwa z urodzenia — idealny przykład reportażu newsowego.",
+                                                   "US Supreme Court ruling on birthright citizenship — a perfect sample news report.")
+        case .postLoginAnalyzingTitle: return ("Analizujemy artykuł…", "Analyzing the article…")
+        case .postLoginDemoBadge: return ("Przykładowa analiza", "Sample analysis")
+        case .postLoginDemoBadgeSub: return ("Nie zużyła żadnego tokenu. Twoje 5 analiz czeka nietknięte.",
+                                              "Used zero tokens. Your 5 analyses are still untouched.")
+        case .postLoginFinishButton: return ("Przejdź do aplikacji", "Go to the app")
+        case .postLoginDemoStageScrape: return ("Pobieranie treści artykułu z rp.pl…", "Fetching article content from rp.pl…")
+        case .postLoginDemoStageAnalyze: return ("Sprawdzanie twierdzeń w wiarygodnych źródłach…", "Checking claims against reliable sources…")
+        case .postLoginDemoStageVerdict: return ("Przygotowywanie werdyktu i raportu…", "Preparing verdict and report…")
+
         case .splashTagline: return ("Ochrona przed dezinformacją", "Protection against disinformation")
         case .splashLoading: return ("Ładowanie…", "Loading…")
         case .back: return ("Wstecz", "Back")
@@ -241,6 +350,11 @@ enum LocKey {
         case .secSourceAssessment: return ("Ocena źródła", "Source assessment")
         case .secMissingContext: return ("Brakujący kontekst", "Missing context")
         case .secCorrection: return ("Sprostowanie", "Correction")
+        case .secAllSources: return ("Wszystkie źródła", "All sources")
+        case .secCategories: return ("Kategorie", "Categories")
+        case .keyFindingsLabel: return ("Kluczowe ustalenia", "Key findings")
+        case .scoreReasoningLabel: return ("Uzasadnienie oceny", "Score reasoning")
+        case .sourcesUsedLabel: return ("Źródła w pipeline", "Pipeline sources")
         case .badgeGrounding: return ("Grounding w wyszukiwarce", "Search grounding")
         case .badgePipeline: return ("3-agentowy pipeline", "3-agent pipeline")
 
@@ -262,7 +376,8 @@ enum LocKey {
         case .shareCredibilityFmt: return ("Wiarygodność: %d/100", "Credibility: %d/100")
         case .sharePDFPreviewTitle: return ("Pełny raport PDF", "Full PDF report")
         case .sharePDFPreviewSub: return ("Wszystkie sekcje, twierdzenia i źródła w jednym pliku.", "All sections, claims and sources in one file.")
-        case .sharePDFHint: return ("PDF zawiera tytuł, miniaturę (YouTube), werdykt, podsumowanie, twierdzenia, wskaźniki i transkrypcję.", "PDF includes title, thumbnail (YouTube), verdict, summary, claims, indicators and transcript.")
+        case .sharePDFHint: return ("PDF zawiera pełną analizę: werdykt, wyniki, twierdzenia z dowodami, wskaźniki, manipulację, ocenę źródła i transkrypcję.",
+                                      "PDF includes the full analysis: verdict, scores, claims with evidence, indicators, manipulation, source assessment and transcript.")
         case .sharePDFFooter: return ("Wygenerowano w FactCheckr · factcheckrai.com", "Generated with FactCheckr · factcheckrai.com")
 
         // Verdict categories
@@ -278,12 +393,12 @@ enum LocKey {
         case .confidenceAI: return ("Pewność AI", "AI confidence")
         case .claimsCount: return ("Twierdzenia", "Claims")
         case .transcript: return ("Transkrypcja", "Transcript")
-        case .scoreHintHigh: return ("Wysoki wynik — większość twierdzeń potwierdzona przez niezależne źródła.",
-                                     "High score — most claims confirmed by independent sources.")
-        case .scoreHintMid: return ("Średni wynik — mieszane dowody: część twierdzeń potwierdzona, inne podważone lub niezweryfikowane.",
-                                    "Medium score — mixed evidence: some claims confirmed, others disputed or unverified.")
-        case .scoreHintLow: return ("Niski wynik — wiele twierdzeń zaprzeczonych przez niezależne źródła.",
-                                    "Low score — many claims contradicted by independent sources.")
+        case .scoreHintHigh: return ("Wysoki wynik, większość twierdzeń potwierdzona przez niezależne źródła.",
+                                     "High score, most claims confirmed by independent sources.")
+        case .scoreHintMid: return ("Średni wynik, mieszane dowody: część twierdzeń potwierdzona, inne podważone lub niezweryfikowane.",
+                                    "Medium score, mixed evidence: some claims confirmed, others disputed or unverified.")
+        case .scoreHintLow: return ("Niski wynik, wiele twierdzeń zaprzeczonych przez niezależne źródła.",
+                                    "Low score, many claims contradicted by independent sources.")
         case .scoreCredible: return ("Wiarygodne", "Credible")
         case .scorePartiallyCredible: return ("Częściowo wiarygodne", "Partially credible")
         case .scoreDoubtful: return ("Wątpliwe", "Doubtful")
@@ -363,11 +478,20 @@ enum LocKey {
         case .tipHistoryTitle: return ("Szukaj i filtruj", "Search and filter")
         case .tipHistoryMessage: return ("Użyj wyszukiwarki, gwiazdek ulubionych i filtrów zagrożenia, aby szybko znaleźć sprawdzenia.",
                                           "Use search, favorites and threat filters to find checks quickly.")
+        case .tipShareFavoritesTitle: return ("Dodaj do Ulubionych w TikToku", "Add to Favorites in TikTok")
+        case .tipShareFavoritesMessage: return ("TikTok → Udostępnij → Więcej → Edytuj → dodaj „Analizuj TikTok” do Ulubionych — wtedy będzie na górze listy.",
+                                                 "TikTok → Share → More → Edit → add “Analyze TikTok” to Favorites — it will appear at the top.")
         case .tipShareTitle: return ("Analiza w tle działa", "Background analysis works")
-        case .tipShareMessage: return ("Udostępnij filmik przez Share → FactCheckr. Dostaniesz powiadomienie z przyciskiem „Zobacz wynik”.",
-                                       "Share a video via Share → FactCheckr. You'll get a notification with a “View result” button.")
+        case .tipShareMessage: return ("Udostępnij filmik przez Share → Analizuj TikTok. Dostaniesz powiadomienie z przyciskiem „Zobacz wynik”.",
+                                       "Share a video via Share → Analyze TikTok. You'll get a notification with a “View result” button.")
+        case .tipClipboardTitle: return ("Link TikToka w schowku", "TikTok link in clipboard")
+        case .tipClipboardMessage: return ("Skopiowałeś link z TikToka — wklej go jednym tapnięciem.",
+                                           "You copied a TikTok link — paste it with one tap.")
+        case .tipClipboardAction: return ("Wklej link", "Paste link")
 
         // Share extension
+        case .shareExtensionName: return ("Analizuj TikTok", "Analyze TikTok")
+        case .openSourceMaterial: return ("Otwórz oryginalny materiał", "Open original material")
         case .shareExtPassing: return ("Przekazuję link do Fact Checkr…", "Passing link to Fact Checkr…")
         case .shareExtReadFail: return ("Nie udało się odczytać udostępnionej treści.", "Could not read shared content.")
         case .shareExtNoUrl: return ("Nie znaleziono linku. Udostępnij post z adresem URL.", "No link found. Share a post with a URL.")
@@ -375,6 +499,13 @@ enum LocKey {
         case .shareExtBackgroundStarted: return ("Analiza ruszyła! Powiadomimy Cię, gdy będzie gotowa — możesz wrócić do filmu.",
                                                  "Analysis started! We'll notify you when it's ready — you can go back to your video.")
         case .shareExtOpenApp: return ("Otwórz aplikację Fact Checkr, aby dokończyć analizę.", "Open Fact Checkr to finish the analysis.")
+        case .shareExtNotLoggedIn: return ("Zaloguj się w FactCheckr, aby analizować z TikToka. Otwieramy aplikację…",
+                                           "Sign in to FactCheckr to analyze from TikTok. Opening the app…")
+        case .shareExtBackgroundFailed: return ("Nie udało się uruchomić analizy w tle. Otwieramy aplikację…",
+                                                 "Couldn't start background analysis. Opening the app…")
+        case .bgAnalysisInflightTitle: return ("Analiza w tle", "Analysis in background")
+        case .bgAnalysisInflightMessage: return ("Ten link jest już sprawdzany w tle. Dostaniesz powiadomienie, gdy wynik będzie gotowy — możesz wrócić do filmu.",
+                                                  "This link is already being checked in the background. You'll get a notification when it's ready — you can go back to your video.")
         }
     }
 }

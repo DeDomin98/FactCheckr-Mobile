@@ -15,6 +15,7 @@ struct AppShellView: View {
     @State private var showLogoutConfirm = false
     @State private var sharedURLToAnalyze: String?
     @State private var historyRefreshToken = 0
+    @State private var showPostLoginTutorial = false
     @State private var isBootstrapping = true
 
     var body: some View {
@@ -25,7 +26,7 @@ struct AppShellView: View {
                         withAnimation(.easeInOut(duration: 0.35)) {
                             showOnboarding = false
                         }
-                        updateAuthGate()
+                        reconcileAuthGate()
                     }
                     .transition(.opacity.combined(with: .scale(scale: 0.98)))
                 } else if showAuthGate {
@@ -33,6 +34,8 @@ struct AppShellView: View {
                         withAnimation(.easeInOut(duration: 0.3)) {
                             showAuthGate = false
                         }
+                        requestPermissionsAfterLogin()
+                        checkPostLoginTutorial()
                     }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else {
@@ -52,17 +55,27 @@ struct AppShellView: View {
         .animation(.easeOut(duration: 0.45), value: isBootstrapping)
         .onAppear {
             bootstrapIfNeeded()
-            updateAuthGate()
+            reconcileAuthGate()
             shareLinkHandler.loadFromAppGroupIfNeeded()
             handlePendingSharedLink()
             Task {
+                await authManager.refreshSharedToken()
                 await dashboardViewModel.refresh(authManager: authManager)
                 await handleNotificationDeepLink()
             }
         }
-        .onChange(of: authManager.isLoggedIn) { _ in
-            if !showOnboarding { updateAuthGate() }
+        .onChange(of: authManager.isLoggedIn) { loggedIn in
+            if loggedIn {
+                reconcileAuthGate()
+            }
+            if loggedIn && !showOnboarding && !showAuthGate {
+                requestPermissionsAfterLogin()
+                checkPostLoginTutorial()
+            }
             Task { await dashboardViewModel.refresh(authManager: authManager) }
+        }
+        .onChange(of: authManager.isAuthStateReady) { _ in
+            reconcileAuthGate()
         }
         .onChange(of: shareLinkHandler.pendingURL) { _ in
             handlePendingSharedLink()
@@ -71,10 +84,16 @@ struct AppShellView: View {
             guard phase == .active else { return }
             shareLinkHandler.loadFromAppGroupIfNeeded()
             handlePendingSharedLink()
-            Task { await dashboardViewModel.refresh(authManager: authManager) }
+            Task {
+                await authManager.refreshSharedToken()
+                await dashboardViewModel.refresh(authManager: authManager)
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .fcOpenAnalysisResult)) { _ in
-            Task { await handleNotificationDeepLink() }
+            Task {
+                await dashboardViewModel.refresh(authManager: authManager)
+                await handleNotificationDeepLink()
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .fcOpenPendingURL)) { _ in
             handlePendingSharedLink()
@@ -119,6 +138,46 @@ struct AppShellView: View {
             }
             Button(Loc.t(.cancel), role: .cancel) {}
         }
+        .fullScreenCover(isPresented: $showPostLoginTutorial) {
+            PostLoginTutorialView(analyzeViewModel: analyzeViewModel) { entry in
+                completePostLoginTutorial(entry: entry)
+            } onSkip: {
+                completePostLoginTutorial(entry: nil)
+            }
+        }
+        .onAppear {
+            if authManager.isLoggedIn && !showOnboarding && !showAuthGate {
+                requestPermissionsAfterLogin()
+            }
+        }
+    }
+
+    private func requestPermissionsAfterLogin() {
+        guard authManager.isLoggedIn, !showOnboarding, !showAuthGate else { return }
+        NotificationService.requestAuthorizationIfNeeded()
+    }
+
+    private func checkPostLoginTutorial() {
+        Task {
+            // ensureUserProfile (social sign-up) may still be writing the pending flag.
+            try? await Task.sleep(nanoseconds: 650_000_000)
+            guard let uid = authManager.user?.uid,
+                  PostLoginTutorialStore.shouldShow(for: uid) else { return }
+            showPostLoginTutorial = true
+        }
+    }
+
+    private func completePostLoginTutorial(entry: AnalysisHistoryEntry?) {
+        if let uid = authManager.user?.uid {
+            PostLoginTutorialStore.markSeen(for: uid)
+        }
+        showPostLoginTutorial = false
+        analyzeViewModel.reset()
+        if let entry {
+            historyRefreshToken += 1
+            homeViewModel.refreshRecent()
+            path.append(AppRoute.result(entry))
+        }
     }
 
     @ViewBuilder
@@ -135,7 +194,11 @@ struct AppShellView: View {
                     path.append(AppRoute.result(entry))
                 },
                 onLoginRequired: {
-                    showAuthGate = true
+                    if authManager.isLoggedIn {
+                        Task { await authManager.refreshSharedToken() }
+                    } else {
+                        showAuthGate = true
+                    }
                 },
                 onOpenAccount: { selectedTab = .account },
                 sharedURLToAnalyze: $sharedURLToAnalyze
@@ -154,13 +217,21 @@ struct AppShellView: View {
                 viewModel: dashboardViewModel,
                 onLogin: { showAuthGate = true },
                 onVerifyEmail: { showAuthGate = true },
-                onCheckLink: { selectedTab = .home }
+                onCheckLink: { selectedTab = .home },
+                onAccountDeleted: {
+                    showAuthGate = authManager.isConfigured
+                    selectedTab = .home
+                }
             )
         }
     }
 
-    private func updateAuthGate() {
-        showAuthGate = authManager.isConfigured && !authManager.isLoggedIn
+    /// Closes the login sheet when a persisted session is restored. Never auto-opens it on launch.
+    private func reconcileAuthGate() {
+        guard authManager.isAuthStateReady else { return }
+        if authManager.isLoggedIn {
+            showAuthGate = false
+        }
     }
 
     private func handlePendingSharedLink() {
@@ -185,22 +256,33 @@ struct AppShellView: View {
 
     @MainActor
     private func handleNotificationDeepLink() async {
-        guard !showOnboarding, !showAuthGate else { return }
+        guard !showOnboarding else { return }
 
         if let failedURL = NotificationDeepLinkStore.consumeFailedURL() {
+            if showAuthGate {
+                SharedLinkStore.savePendingURL(failedURL)
+                return
+            }
             selectedTab = .home
             sharedURLToAnalyze = failedURL
             return
         }
 
-        guard let pending = NotificationDeepLinkStore.peekReady(),
-              let uid = authManager.user?.uid,
-              pending.uid == uid else { return }
+        guard let pending = NotificationDeepLinkStore.peekReady() else { return }
+
+        if showAuthGate { return }
+
+        guard let uid = authManager.user?.uid, pending.uid == uid else { return }
 
         await dashboardViewModel.refresh(authManager: authManager)
 
-        let entry = dashboardViewModel.history.first(where: { $0.id == pending.entryId })
+        var entry = dashboardViewModel.history.first(where: { $0.id == pending.entryId })
             ?? BackgroundAnalysisStore.peek(entryId: pending.entryId, uid: uid)
+
+        if entry == nil, let sourceUrl = pending.sourceUrl {
+            entry = BackgroundAnalysisStore.peek(sourceUrl: sourceUrl, uid: uid)
+                ?? dashboardViewModel.history.first { urlsRoughlyMatch($0.sourceUrl, sourceUrl) }
+        }
 
         guard let entry else { return }
 

@@ -9,10 +9,15 @@ struct HomeView: View {
     var onLoginRequired: () -> Void
     var onOpenAccount: () -> Void
     @Binding var sharedURLToAnalyze: String?
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var activeEndpoint: AnalyzeEndpoint = .article
     @State private var showHomeCheckTip = ContextualTipStore.isVisible(.homeCheck)
+    @State private var showShareFavoritesTip = ContextualTipStore.shouldShowShareFavoritesTip
     @State private var showShareTip = ContextualTipStore.shouldShowShareTip
+    @State private var showClipboardTip = false
+    @State private var dismissedClipboardURL: String?
+    @State private var backgroundInflightURL: String?
 
     var body: some View {
         ScrollView {
@@ -21,7 +26,33 @@ struct HomeView: View {
                     welcomeHeader
                 }
 
-                if showShareTip && !analyzeViewModel.isRunning {
+                if authManager.isLoggedIn && showShareFavoritesTip && !analyzeViewModel.isRunning {
+                    FCTipBanner(
+                        icon: "star.circle.fill",
+                        tint: FCTheme.orange,
+                        title: Loc.t(.tipShareFavoritesTitle),
+                        message: Loc.t(.tipShareFavoritesMessage)
+                    ) {
+                        showShareFavoritesTip = false
+                        ContextualTipStore.dismiss(.shareFavorites)
+                    }
+                } else if authManager.isLoggedIn && showClipboardTip && !analyzeViewModel.isRunning {
+                    FCTipBanner(
+                        icon: "doc.on.clipboard.fill",
+                        tint: FCTheme.tiktok,
+                        title: Loc.t(.tipClipboardTitle),
+                        message: Loc.t(.tipClipboardMessage),
+                        actionTitle: Loc.t(.tipClipboardAction),
+                        onAction: {
+                            homeViewModel.applyClipboardTikTokURL()
+                            showClipboardTip = false
+                            Task { await runAnalysis() }
+                        }
+                    ) {
+                        dismissedClipboardURL = homeViewModel.clipboardTikTokURL
+                        showClipboardTip = false
+                    }
+                } else if authManager.isLoggedIn && showShareTip && !analyzeViewModel.isRunning {
                     FCTipBanner(
                         icon: "bell.badge.fill",
                         tint: FCTheme.green,
@@ -31,7 +62,7 @@ struct HomeView: View {
                         showShareTip = false
                         ContextualTipStore.dismiss(.shareBackground)
                     }
-                } else if showHomeCheckTip && !analyzeViewModel.isRunning {
+                } else if authManager.isLoggedIn && showHomeCheckTip && !analyzeViewModel.isRunning {
                     FCTipBanner(
                         icon: "lightbulb.fill",
                         tint: FCTheme.accentLight,
@@ -65,7 +96,18 @@ struct HomeView: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
 
-                if let error = analyzeViewModel.errorMessage, !analyzeViewModel.isRunning {
+                if let inflightURL = backgroundInflightURL, !analyzeViewModel.isRunning {
+                    FCTipBanner(
+                        icon: "arrow.triangle.2.circlepath",
+                        tint: FCTheme.accentLight,
+                        title: Loc.t(.bgAnalysisInflightTitle),
+                        message: Loc.t(.bgAnalysisInflightMessage)
+                    ) {
+                        backgroundInflightURL = nil
+                    }
+                }
+
+                if let error = analyzeViewModel.errorMessage, !analyzeViewModel.isRunning, backgroundInflightURL == nil {
                     inlineErrorBanner(error)
                     if analyzeViewModel.requiresLogin {
                         FCPrimaryButton(title: Loc.t(.login), icon: "person.fill") {
@@ -92,14 +134,29 @@ struct HomeView: View {
         .animation(.easeOut(duration: 0.35), value: analyzeViewModel.isRunning)
         .onAppear {
             homeViewModel.refreshRecent()
-            showShareTip = ContextualTipStore.shouldShowShareTip
+            refreshLoggedInHomeExtras()
             Task { await dashboardViewModel.refresh(authManager: authManager) }
+        }
+        .onChange(of: authManager.isLoggedIn) { loggedIn in
+            if loggedIn {
+                refreshLoggedInHomeExtras()
+            } else {
+                homeViewModel.clearClipboardHint()
+                showClipboardTip = false
+            }
+        }
+        .onChange(of: scenePhase) { phase in
+            guard phase == .active, authManager.isLoggedIn else { return }
+            homeViewModel.refreshClipboardTikTokURL()
+            refreshClipboardTipVisibility()
+            Task { await pollBackgroundResults() }
         }
         .onChange(of: sharedURLToAnalyze) { url in
             guard let url else { return }
-            homeViewModel.urlText = url
-            sharedURLToAnalyze = nil
-            Task { await runAnalysis() }
+            Task { await handleIncomingSharedURL(url) }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .fcOpenAnalysisResult)) { _ in
+            Task { await pollBackgroundResults() }
         }
     }
 
@@ -241,7 +298,7 @@ struct HomeView: View {
         HStack(spacing: 12) {
             VerdictBadge(category: VerdictCategory.from(analysis: entry.response.analysis), compact: true)
             VStack(alignment: .leading, spacing: 4) {
-                Text(entry.title.fcDisplay)
+                Text(MediaPreviewHelper.displayTitle(for: entry).fcDisplay)
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(FCTheme.textPrimary)
                     .lineLimit(2)
@@ -287,21 +344,112 @@ struct HomeView: View {
         .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusSM, style: .continuous))
     }
 
+    private func refreshLoggedInHomeExtras() {
+        guard authManager.isLoggedIn else { return }
+        homeViewModel.refreshClipboardTikTokURL()
+        refreshClipboardTipVisibility()
+        showShareFavoritesTip = ContextualTipStore.shouldShowShareFavoritesTip
+        showShareTip = ContextualTipStore.shouldShowShareTip
+    }
+
+    private func refreshClipboardTipVisibility() {
+        guard homeViewModel.urlText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            showClipboardTip = false
+            return
+        }
+        guard let url = homeViewModel.clipboardTikTokURL else {
+            showClipboardTip = false
+            return
+        }
+        showClipboardTip = dismissedClipboardURL != url
+    }
+
+    private func handleIncomingSharedURL(_ url: String) async {
+        homeViewModel.urlText = url
+        sharedURLToAnalyze = nil
+
+        if let entry = await resolveExistingResult(for: url) {
+            backgroundInflightURL = nil
+            homeViewModel.clearInput()
+            onResult(entry)
+            return
+        }
+
+        if BackgroundInflightStore.isInflight(url: url, uid: authManager.user?.uid) {
+            backgroundInflightURL = url
+            return
+        }
+
+        backgroundInflightURL = nil
+        await runAnalysis()
+    }
+
+    private func resolveExistingResult(for url: String) async -> AnalysisHistoryEntry? {
+        await dashboardViewModel.refresh(authManager: authManager)
+        guard let uid = authManager.user?.uid else { return nil }
+
+        if let pending = BackgroundAnalysisStore.peek(sourceUrl: url, uid: uid) {
+            return pending
+        }
+        return dashboardViewModel.history.first { urlsRoughlyMatch($0.sourceUrl, url) }
+    }
+
+    private func pollBackgroundResults() async {
+        guard let url = backgroundInflightURL else { return }
+        guard !BackgroundInflightStore.isInflight(url: url, uid: authManager.user?.uid) else { return }
+
+        if let entry = await resolveExistingResult(for: url) {
+            backgroundInflightURL = nil
+            homeViewModel.clearInput()
+            onResult(entry)
+        }
+    }
+
     private func runAnalysis() async {
         guard let url = homeViewModel.extractedURL else { return }
+
+        if let entry = await resolveExistingResult(for: url) {
+            backgroundInflightURL = nil
+            homeViewModel.clearInput()
+            onResult(entry)
+            return
+        }
+
+        if BackgroundInflightStore.isInflight(url: url, uid: authManager.user?.uid) {
+            backgroundInflightURL = url
+            return
+        }
+
         Haptics.impact(.medium)
         activeEndpoint = pickEndpoint(url)
         analyzeViewModel.reset()
         await analyzeViewModel.analyze(url: url, endpoint: activeEndpoint, authManager: authManager)
+
         if let result = analyzeViewModel.result {
-            let entry = AnalysisHistoryEntry(sourceUrl: url, endpoint: activeEndpoint, response: result)
-            AnalysisHistoryStore.shared.save(entry)
-            homeViewModel.refreshRecent()
+            await saveAndPresentResult(url: url, result: result)
+            return
+        }
+
+        // Background share may have finished while foreground run failed.
+        if analyzeViewModel.errorMessage != nil,
+           let entry = await resolveExistingResult(for: url) {
+            analyzeViewModel.reset()
+            backgroundInflightURL = nil
             homeViewModel.clearInput()
-            ContextualTipStore.markFirstAnalysisCompleted()
-            showHomeCheckTip = false
-            Task { await dashboardViewModel.refresh(authManager: authManager) }
             onResult(entry)
         }
+    }
+
+    private func saveAndPresentResult(url: String, result: AnalysisResponse) async {
+        await MediaPreviewHelper.loadMediaPreview(for: url)
+        let entry = AnalysisHistoryEntry(sourceUrl: url, endpoint: activeEndpoint, response: result)
+        AnalysisHistoryStore.shared.save(entry)
+        homeViewModel.refreshRecent()
+        homeViewModel.clearInput()
+        backgroundInflightURL = nil
+        ContextualTipStore.markFirstAnalysisCompleted()
+        showHomeCheckTip = false
+        Task { await dashboardViewModel.refresh(authManager: authManager) }
+        onResult(entry)
     }
 }

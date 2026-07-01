@@ -9,6 +9,7 @@ enum ContextualTipStore {
         case homeCheck
         case historyBrowse
         case shareBackground
+        case shareFavorites
     }
 
     private static var appGroup: UserDefaults? {
@@ -21,6 +22,12 @@ enum ContextualTipStore {
 
     static func dismiss(_ tip: Tip) {
         UserDefaults.standard.set(true, forKey: prefix + tip.rawValue)
+    }
+
+    /// Shown until the user has successfully used the share extension at least once.
+    static var shouldShowShareFavoritesTip: Bool {
+        guard isVisible(.shareFavorites) else { return false }
+        return appGroup?.bool(forKey: shareEligibleKey) != true
     }
 
     static var shouldShowShareTip: Bool {

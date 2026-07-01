@@ -22,11 +22,15 @@ enum NotificationDeepLinkStore {
         UserDefaults(suiteName: AppGroupConfig.identifier)
     }
 
-    static func saveReady(entryId: String, uid: String) {
+    static func saveReady(entryId: String, uid: String, sourceUrl: String? = nil) {
         defaults?.set(Kind.ready.rawValue, forKey: kindKey)
         defaults?.set(entryId, forKey: entryIdKey)
         defaults?.set(uid, forKey: uidKey)
-        defaults?.removeObject(forKey: urlKey)
+        if let sourceUrl {
+            defaults?.set(sourceUrl, forKey: urlKey)
+        } else {
+            defaults?.removeObject(forKey: urlKey)
+        }
     }
 
     static func saveFailed(url: String) {
@@ -36,11 +40,12 @@ enum NotificationDeepLinkStore {
         defaults?.removeObject(forKey: uidKey)
     }
 
-    static func peekReady() -> (entryId: String, uid: String)? {
+    static func peekReady() -> (entryId: String, uid: String, sourceUrl: String?)? {
         guard defaults?.string(forKey: kindKey) == Kind.ready.rawValue,
               let entryId = defaults?.string(forKey: entryIdKey),
               let uid = defaults?.string(forKey: uidKey) else { return nil }
-        return (entryId, uid)
+        let sourceUrl = defaults?.string(forKey: urlKey)
+        return (entryId, uid, sourceUrl)
     }
 
     static func consumeFailedURL() -> String? {
@@ -106,6 +111,21 @@ enum NotificationService {
         }
     }
 
+    /// Shows the system notification prompt only when status is still undecided.
+    static func requestAuthorizationIfNeeded(completion: ((Bool) -> Void)? = nil) {
+        registerCategoriesIfNeeded()
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            switch settings.authorizationStatus {
+            case .notDetermined:
+                requestAuthorization(completion: completion)
+            case .authorized, .provisional, .ephemeral:
+                DispatchQueue.main.async { completion?(true) }
+            default:
+                DispatchQueue.main.async { completion?(false) }
+            }
+        }
+    }
+
     static func refreshAuthorization() {
         didRegisterCategories = false
         registerCategoriesIfNeeded()
@@ -135,7 +155,7 @@ enum NotificationService {
             content: content,
             trigger: nil
         )
-        UNUserNotificationCenter.current().add(request)
+        deliver(request)
     }
 
     static func postAnalysisFailed(url: String, message: String) {
@@ -158,7 +178,26 @@ enum NotificationService {
             content: content,
             trigger: nil
         )
-        UNUserNotificationCenter.current().add(request)
+        deliver(request)
+    }
+
+    private static func deliver(_ request: UNNotificationRequest) {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            switch settings.authorizationStatus {
+            case .authorized, .provisional, .ephemeral:
+                UNUserNotificationCenter.current().add(request) { error in
+                    #if DEBUG
+                    if let error {
+                        print("[NotificationService] add failed: \(error.localizedDescription)")
+                    }
+                    #endif
+                }
+            default:
+                #if DEBUG
+                print("[NotificationService] skipped — authorization: \(settings.authorizationStatus.rawValue)")
+                #endif
+            }
+        }
     }
 
     // MARK: - Handle response (AppDelegate)
@@ -173,7 +212,8 @@ enum NotificationService {
            let entryId = info["entryId"] as? String,
            let uid = info["uid"] as? String {
             if action == UNNotificationDefaultActionIdentifier || action == actionViewResult {
-                NotificationDeepLinkStore.saveReady(entryId: entryId, uid: uid)
+                let sourceUrl = info["sourceUrl"] as? String
+                NotificationDeepLinkStore.saveReady(entryId: entryId, uid: uid, sourceUrl: sourceUrl)
                 NotificationCenter.default.post(name: .fcOpenAnalysisResult, object: nil, userInfo: info)
             }
             return

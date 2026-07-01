@@ -18,6 +18,7 @@ final class ShareViewController: UIViewController {
         if let code = UserDefaults(suiteName: AppGroupConfig.identifier)?.string(forKey: "fc_app_lang_code") {
             Loc.currentCode = code
         }
+        BackgroundAnalysisService.shared.activate()
         view.backgroundColor = UIColor(red: 0.04, green: 0.04, blue: 0.06, alpha: 1)
         setupUI()
     }
@@ -86,32 +87,32 @@ final class ShareViewController: UIViewController {
             return
         }
 
-        // Persist first so the main app can always pick it up — even if the
-        // background hand-off below fails (e.g. user opens the app manually).
+        // Keep in App Group until background run finishes or the main app picks it up.
         SharedLinkStore.savePendingURL(url)
 
         statusLabel.text = Loc.t(.shareExtStarting)
 
-        // Preferred path: analyze in the background so the user can stay in the
-        // video they were watching. Requires a recent login (fresh ID token).
         let result = await BackgroundAnalysisService.shared.startAnalysis(urlString: url)
 
         switch result {
         case .started:
             UserDefaults(suiteName: AppGroupConfig.identifier)?.set(true, forKey: "fc_tip_share_eligible")
-            NotificationService.requestAuthorization()
-            // The background run will produce the result and a push, so don't
-            // re-analyze the same link on next launch.
-            SharedLinkStore.clearPendingURL()
+            NotificationService.requestAuthorizationIfNeeded()
             finishBackground(Loc.t(.shareExtBackgroundStarted))
-        case .notLoggedIn, .failed:
-            // Fall back to opening the app (sign-in required or background failed).
-            let opened = openMainApp(ShareDeepLink.openAppURL)
-            let delay: TimeInterval = opened ? 0.05 : 1.4
-            if !opened {
-                statusLabel.text = Loc.t(.shareExtOpenApp)
+        case .notLoggedIn:
+            statusLabel.text = Loc.t(.shareExtNotLoggedIn)
+            spinner.stopAnimating()
+            spinner.isHidden = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) { [weak self] in
+                _ = self?.openMainApp(ShareDeepLink.openAppURL)
+                self?.extensionContext?.completeRequest(returningItems: nil)
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+        case .failed:
+            let opened = openMainApp(ShareDeepLink.openAppURL)
+            statusLabel.text = opened ? Loc.t(.shareExtOpenApp) : Loc.t(.shareExtBackgroundFailed)
+            spinner.stopAnimating()
+            spinner.isHidden = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + (opened ? 0.05 : 1.4)) { [weak self] in
                 self?.extensionContext?.completeRequest(returningItems: nil)
             }
         }
@@ -121,7 +122,7 @@ final class ShareViewController: UIViewController {
         spinner.stopAnimating()
         spinner.isHidden = true
         statusLabel.text = message
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             self?.extensionContext?.completeRequest(returningItems: nil)
         }
     }
@@ -141,7 +142,6 @@ final class ShareViewController: UIViewController {
             }
             responder = current.next
         }
-        // Fallback to the (less reliable) extension context API.
         extensionContext?.open(url, completionHandler: nil)
         return false
     }
@@ -150,7 +150,7 @@ final class ShareViewController: UIViewController {
         spinner.stopAnimating()
         spinner.isHidden = true
         statusLabel.text = message
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             self?.extensionContext?.completeRequest(returningItems: nil)
         }
     }

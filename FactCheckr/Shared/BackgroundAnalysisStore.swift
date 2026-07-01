@@ -49,7 +49,16 @@ enum BackgroundAnalysisStore {
         loadAll().first { $0.uid == uid && $0.entry.id == entryId }?.entry
     }
 
+    static func peek(sourceUrl: String, uid: String) -> AnalysisHistoryEntry? {
+        loadAll().first { $0.uid == uid && urlsRoughlyMatch($0.entry.sourceUrl, sourceUrl) }?.entry
+    }
+
     static var hasPending: Bool {
         !loadAll().isEmpty
+    }
+
+    static func removeAll(for uid: String) {
+        let rest = loadAll().filter { $0.uid != uid }
+        persist(rest)
     }
 }

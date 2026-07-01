@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDisplayName</key>
-	<string>Fact Checkr</string>
+	<string>Analizuj TikTok</string>
 	<key>CFBundleName</key>
 	<string>FactCheckrShare</string>
 	<key>NSExtension</key>
@@ -18,6 +18,7 @@
 		$extensionItem.attachments,
 		$attachment,
 		ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url"
+		|| ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.file-url"
 		|| ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.plain-text"
 		|| ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.text"
 	).@count &gt;= 1

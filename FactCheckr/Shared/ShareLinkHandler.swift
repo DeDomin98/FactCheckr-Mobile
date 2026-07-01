@@ -20,7 +20,7 @@ final class ShareLinkHandler: ObservableObject {
     }
 
     private func adoptFromAppGroupIfAvailable() {
-        guard pendingURL == nil, let url = SharedLinkStore.consumePendingURL() else { return }
+        guard pendingURL == nil, let url = SharedLinkStore.peekPendingURL() else { return }
         let trimmed = url.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         pendingURL = trimmed

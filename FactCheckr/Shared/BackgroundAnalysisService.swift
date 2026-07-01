@@ -46,6 +46,12 @@ final class BackgroundAnalysisService: NSObject {
         guard !trimmed.isEmpty else { return .failed }
         guard let auth = AppGroupTokenStore.validToken() else { return .notLoggedIn }
 
+        // Already finished in background while the extension was open.
+        if BackgroundAnalysisStore.peek(sourceUrl: trimmed, uid: auth.uid) != nil {
+            SharedLinkStore.clearPendingURL()
+            return .started
+        }
+
         let endpoint = pickEndpoint(trimmed)
 
         guard let pow = await solveChallenge() else { return .failed }
@@ -72,7 +78,10 @@ final class BackgroundAnalysisService: NSObject {
         req.setValue("Bearer \(auth.token)", forHTTPHeaderField: "Authorization")
 
         let task = session.uploadTask(with: req, fromFile: fileURL)
-        task.taskDescription = encodeMeta(url: trimmed, endpoint: endpoint, uid: auth.uid, bodyPath: fileURL.path)
+        let meta = encodeMeta(url: trimmed, endpoint: endpoint, uid: auth.uid, bodyPath: fileURL.path)
+        guard !meta.isEmpty else { return .failed }
+        task.taskDescription = meta
+        BackgroundInflightStore.markStarted(url: trimmed, uid: auth.uid)
         task.resume()
         return .started
     }
@@ -90,7 +99,9 @@ final class BackgroundAnalysisService: NSObject {
                 let difficulty: Int
             }
             let c = try JSONDecoder().decode(ChallengeResp.self, from: data)
-            let nonce = solvePoW(challenge: c.challenge, difficulty: c.difficulty)
+            let nonce = await Task.detached(priority: .userInitiated) {
+                solvePoW(challenge: c.challenge, difficulty: c.difficulty)
+            }.value
             return PowSolution(challenge: c.challenge, signature: c.signature, nonce: nonce)
         } catch {
             return nil
@@ -130,7 +141,7 @@ final class BackgroundAnalysisService: NSObject {
     }
 
     private func decodeMeta(_ description: String?) -> TaskMeta? {
-        guard let description, let data = description.data(using: .utf8) else { return nil }
+        guard let description, !description.isEmpty, let data = description.data(using: .utf8) else { return nil }
         return try? JSONDecoder().decode(TaskMeta.self, from: data)
     }
 
@@ -140,6 +151,8 @@ final class BackgroundAnalysisService: NSObject {
         if !meta.bodyPath.isEmpty {
             try? FileManager.default.removeItem(at: URL(fileURLWithPath: meta.bodyPath))
         }
+
+        BackgroundInflightStore.clear(url: meta.url, uid: meta.uid)
 
         guard statusCode < 400, let resultData = extractResultData(from: body) else {
             handleFailure(meta: meta, statusCode: statusCode)
@@ -154,15 +167,21 @@ final class BackgroundAnalysisService: NSObject {
         let endpoint = AnalyzeEndpoint(metaValue: meta.endpoint)
         let entry = AnalysisHistoryEntry(sourceUrl: meta.url, endpoint: endpoint, response: response)
         BackgroundAnalysisStore.add(entry: entry, uid: meta.uid)
+        SharedLinkStore.clearPendingURL()
         UserDefaults(suiteName: AppGroupConfig.identifier)?.set(true, forKey: "fc_tip_share_eligible")
 
-        notify(
-            entry: entry,
-            uid: meta.uid
-        )
+        notify(entry: entry, uid: meta.uid)
     }
 
     private func handleFailure(meta: TaskMeta, statusCode: Int) {
+        BackgroundInflightStore.clear(url: meta.url, uid: meta.uid)
+
+        // Race: foreground retry or duplicate task may have succeeded already.
+        if BackgroundAnalysisStore.peek(sourceUrl: meta.url, uid: meta.uid) != nil {
+            SharedLinkStore.clearPendingURL()
+            return
+        }
+
         SharedLinkStore.savePendingURL(meta.url)
         let message = statusCode == 401 || statusCode == 402
             ? Loc.t(.notifBackgroundAuthFail)
@@ -180,6 +199,7 @@ final class BackgroundAnalysisService: NSObject {
             guard !line.isEmpty, let d = line.data(using: .utf8),
                   let obj = try? JSONSerialization.jsonObject(with: d) as? [String: Any],
                   let type = obj["type"] as? String else { continue }
+            if type == "error" { return nil }
             if type == "result", let dataObj = obj["data"] {
                 result = try? JSONSerialization.data(withJSONObject: dataObj)
             }
@@ -189,6 +209,9 @@ final class BackgroundAnalysisService: NSObject {
 
     private func notify(entry: AnalysisHistoryEntry, uid: String) {
         NotificationService.postAnalysisReady(entry: entry, uid: uid)
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .fcOpenAnalysisResult, object: nil)
+        }
     }
 }
 
@@ -205,13 +228,27 @@ extension BackgroundAnalysisService: URLSessionDataDelegate {
         buffers[task.taskIdentifier] = nil
         lock.unlock()
 
-        guard let meta = decodeMeta(task.taskDescription) else { return }
+        guard let meta = decodeMeta(task.taskDescription) else {
+            #if DEBUG
+            print("[BackgroundAnalysis] missing task meta — completion dropped")
+            #endif
+            return
+        }
+
         let statusCode = (task.response as? HTTPURLResponse)?.statusCode ?? 0
+
+        // Prefer parsed body when present — some background transfers report an error
+        // even though the response payload arrived.
+        if !body.isEmpty {
+            handleCompletion(meta: meta, body: body, statusCode: statusCode == 0 ? 200 : statusCode)
+            return
+        }
 
         if error != nil {
             handleFailure(meta: meta, statusCode: statusCode == 0 ? 599 : statusCode)
             return
         }
+
         handleCompletion(meta: meta, body: body, statusCode: statusCode == 0 ? 200 : statusCode)
     }
 

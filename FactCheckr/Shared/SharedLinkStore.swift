@@ -22,6 +22,10 @@ enum SharedLinkStore {
         defaults?.set(url, forKey: AppGroupConfig.pendingURLKey)
     }
 
+    static func peekPendingURL() -> String? {
+        defaults?.string(forKey: AppGroupConfig.pendingURLKey)
+    }
+
     static func consumePendingURL() -> String? {
         guard let url = defaults?.string(forKey: AppGroupConfig.pendingURLKey) else { return nil }
         defaults?.removeObject(forKey: AppGroupConfig.pendingURLKey)

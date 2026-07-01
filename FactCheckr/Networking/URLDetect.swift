@@ -67,3 +67,14 @@ func extractURL(from raw: String) -> String? {
     guard let m = raw.range(of: #"https?://[^\s]+"#, options: .regularExpression) else { return nil }
     return String(raw[m]).trimmingCharacters(in: CharacterSet(charactersIn: ")]\"'"))
 }
+
+/// Loose URL equality for deduplicating share / background / foreground runs.
+func urlsRoughlyMatch(_ a: String, _ b: String) -> Bool {
+    normalizeURLKey(a) == normalizeURLKey(b)
+}
+
+func normalizeURLKey(_ url: String) -> String {
+    var s = url.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    while s.hasSuffix("/") { s.removeLast() }
+    return s
+}

@@ -9,6 +9,7 @@ func configureFirebaseIfPossible() {
         print("[Firebase] GoogleService-Info.plist brak - auth wyłączony, UI działa.")
         return
     }
+    guard FirebaseApp.app() == nil else { return }
     FirebaseApp.configure()
     if let clientID = FirebaseApp.app()?.options.clientID {
         GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
@@ -26,6 +27,8 @@ final class AuthManager: ObservableObject {
 
     @Published private(set) var user: User?
     @Published private(set) var isConfigured: Bool
+    /// Becomes `true` once Firebase Auth has reported its initial persisted session state.
+    @Published private(set) var isAuthStateReady = false
     @Published var errorMessage: String?
 
     var isLoggedIn: Bool { user != nil }
@@ -37,16 +40,21 @@ final class AuthManager: ObservableObject {
     private var authListener: AuthStateDidChangeListenerHandle?
 
     private init() {
+        configureFirebaseIfPossible()
         isConfigured = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil
         if isConfigured {
             authListener = Auth.auth().addStateDidChangeListener { [weak self] _, user in
                 Task { @MainActor in
                     self?.user = user
+                    self?.isAuthStateReady = true
                     self?.onAuthChanged(user)
                 }
             }
             user = Auth.auth().currentUser
+            isAuthStateReady = true
             AnalysisHistoryStore.shared.activeUID = user?.uid
+        } else {
+            isAuthStateReady = true
         }
     }
 
@@ -77,11 +85,18 @@ final class AuthManager: ObservableObject {
             AppGroupTokenStore.clear()
             return
         }
+        self.user = user
         do {
-            let token = try await user.getIDToken()
+            let token = try await user.getIDToken(forcingRefresh: false)
             AppGroupTokenStore.save(token: token, uid: user.uid)
         } catch {
-            // Keep any previously stored token; it may still be valid.
+            // Retry once with a forced refresh before giving up.
+            do {
+                let token = try await user.getIDToken(forcingRefresh: true)
+                AppGroupTokenStore.save(token: token, uid: user.uid)
+            } catch {
+                // Keep any previously stored token; it may still be valid.
+            }
         }
     }
 
@@ -101,6 +116,7 @@ final class AuthManager: ObservableObject {
         errorMessage = nil
         let result = try await Auth.auth().createUser(withEmail: email, password: password)
         user = result.user
+        PostLoginTutorialStore.schedule(for: result.user.uid)
         let token = try await result.user.getIDToken()
         try await APIClient.shared.sendVerificationEmail(idToken: token)
     }
@@ -184,9 +200,10 @@ final class AuthManager: ObservableObject {
         user = nil
     }
 
-    func getIDToken() async throws -> String? {
-        guard isConfigured, let user else { return nil }
-        return try await user.getIDToken()
+    func getIDToken(forceRefresh: Bool = false) async throws -> String? {
+        guard isConfigured, let user = Auth.auth().currentUser else { return nil }
+        self.user = user
+        return try await user.getIDToken(forcingRefresh: forceRefresh)
     }
 
     func reloadUser() async throws {
@@ -201,6 +218,62 @@ final class AuthManager: ObservableObject {
         }
         let token = try await user.getIDToken()
         try await APIClient.shared.sendVerificationEmail(idToken: token)
+    }
+
+    enum DeleteAccountError: LocalizedError {
+        case notConfigured
+        case reauthenticationRequired
+        case remoteDataDeletionFailed
+
+        var errorDescription: String? {
+            switch self {
+            case .notConfigured: return Loc.t(.deleteAccountNotConfigured)
+            case .reauthenticationRequired: return Loc.t(.deleteAccountReauth)
+            case .remoteDataDeletionFailed: return Loc.t(.deleteAccountRemoteFailed)
+            }
+        }
+    }
+
+    /// Permanently deletes the Firebase account and user data. Pass `password` for email/password accounts.
+    func deleteAccount(password: String? = nil) async throws {
+        guard isConfigured, let user = Auth.auth().currentUser else {
+            throw DeleteAccountError.notConfigured
+        }
+        let uid = user.uid
+
+        if let email = user.email,
+           user.providerData.contains(where: { $0.providerID == "password" }),
+           let password, !password.isEmpty {
+            let credential = EmailAuthProvider.credential(withEmail: email, password: password)
+            try await user.reauthenticate(with: credential)
+        }
+
+        do {
+            try await UserProfileService.shared.deleteAllUserData(uid: uid)
+        } catch {
+            throw DeleteAccountError.remoteDataDeletionFailed
+        }
+
+        LocalUserDataCleaner.clearAll(for: uid)
+
+        do {
+            try await user.delete()
+        } catch let error as NSError {
+            if error.domain == AuthErrorDomain,
+               AuthErrorCode(rawValue: error.code) == .requiresRecentLogin {
+                throw DeleteAccountError.reauthenticationRequired
+            }
+            throw error
+        }
+
+        GIDSignIn.sharedInstance.signOut()
+        self.user = nil
+        AnalysisHistoryStore.shared.activeUID = nil
+        FavoritesStore.shared.activeUID = nil
+    }
+
+    var usesEmailPasswordProvider: Bool {
+        user?.providerData.contains(where: { $0.providerID == "password" }) == true
     }
 
     enum AuthError: LocalizedError {

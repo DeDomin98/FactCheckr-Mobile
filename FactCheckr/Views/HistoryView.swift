@@ -129,27 +129,24 @@ struct HistoryView: View {
         ScrollView {
             LazyVStack(spacing: 10) {
                 ForEach(entries) { entry in
-                    Button {
-                        onSelect(entry)
-                    } label: {
-                        historyRow(entry)
-                    }
-                    .buttonStyle(.plain)
-                    .contextMenu {
-                        Button {
-                            viewModel.toggleFavorite(entry)
-                        } label: {
-                            Label(
-                                viewModel.isFavorite(entry.id) ? Loc.t(.removeFromFavorites) : Loc.t(.addToFavorites),
-                                systemImage: viewModel.isFavorite(entry.id) ? "star.slash" : "star"
-                            )
+                    historyRow(entry)
+                        .contentShape(Rectangle())
+                        .onTapGesture { onSelect(entry) }
+                        .contextMenu {
+                            Button {
+                                viewModel.toggleFavorite(entry)
+                            } label: {
+                                Label(
+                                    viewModel.isFavorite(entry.id) ? Loc.t(.removeFromFavorites) : Loc.t(.addToFavorites),
+                                    systemImage: viewModel.isFavorite(entry.id) ? "star.slash" : "star"
+                                )
+                            }
+                            Button(role: .destructive) {
+                                viewModel.deleteEntry(entry.id)
+                            } label: {
+                                Label(Loc.t(.deleteFromHistory), systemImage: "trash")
+                            }
                         }
-                        Button(role: .destructive) {
-                            viewModel.deleteEntry(entry.id)
-                        } label: {
-                            Label(Loc.t(.deleteFromDevice), systemImage: "trash")
-                        }
-                    }
                 }
             }
             .padding(.horizontal, 20)

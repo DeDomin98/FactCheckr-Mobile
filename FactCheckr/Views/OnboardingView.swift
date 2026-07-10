@@ -22,6 +22,7 @@ struct OnboardingView: View {
     @State private var heroAppeared = false
 
     private var pages: [OnboardingPage] {
+        // Keep onboarding short — detailed Share/YouTube flows live in contextual tips.
         [
             OnboardingPage(
                 id: 0,
@@ -52,33 +53,6 @@ struct OnboardingView: View {
             ),
             OnboardingPage(
                 id: 3,
-                icon: "music.note.list",
-                tint: FCTheme.tiktok,
-                titleKey: .onboardingPage4Title,
-                subtitleKey: .onboardingPage4Sub,
-                layout: .steps,
-                itemKeys: [.onboardingTikTokStep1, .onboardingTikTokStep2, .onboardingTikTokStep3, .onboardingTikTokStep4]
-            ),
-            OnboardingPage(
-                id: 4,
-                icon: "play.rectangle.fill",
-                tint: FCTheme.youtube,
-                titleKey: .onboardingPage5Title,
-                subtitleKey: .onboardingPage5Sub,
-                layout: .steps,
-                itemKeys: [.onboardingYTStep1, .onboardingYTStep2, .onboardingYTStep3, .onboardingYTStep4]
-            ),
-            OnboardingPage(
-                id: 5,
-                icon: "bell.badge.fill",
-                tint: FCTheme.green,
-                titleKey: .onboardingPage6Title,
-                subtitleKey: .onboardingPage6Sub,
-                layout: .steps,
-                itemKeys: [.onboardingBackgroundStep1, .onboardingBackgroundStep2, .onboardingBackgroundStep3, .onboardingBackgroundStep4]
-            ),
-            OnboardingPage(
-                id: 6,
                 icon: "person.crop.circle.badge.checkmark",
                 tint: FCTheme.orange,
                 titleKey: .onboardingPage7Title,

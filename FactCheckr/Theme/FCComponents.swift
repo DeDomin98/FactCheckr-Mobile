@@ -108,16 +108,21 @@ struct FCPrimaryButton: View {
 struct FCSecondaryButton: View {
     let title: String
     var icon: String? = nil
+    var isLoading = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                if let icon {
-                    Image(systemName: icon)
+                if isLoading {
+                    ProgressView().tint(FCTheme.textPrimary)
+                } else {
+                    if let icon {
+                        Image(systemName: icon)
+                    }
+                    Text(title)
+                        .fontWeight(.semibold)
                 }
-                Text(title)
-                    .fontWeight(.semibold)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
@@ -128,7 +133,9 @@ struct FCSecondaryButton: View {
                     .stroke(FCTheme.borderLight, lineWidth: 1)
             )
             .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusMD, style: .continuous))
+            .opacity(isLoading ? 0.7 : 1)
         }
+        .disabled(isLoading)
     }
 }
 

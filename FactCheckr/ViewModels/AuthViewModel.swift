@@ -74,11 +74,11 @@ final class AuthViewModel: ObservableObject {
     func signUp(authManager: AuthManager) async -> Bool {
         guard validateEmailPassword() else { return false }
         guard password == confirmPassword else {
-            errorMessage = "Hasła nie są identyczne."
+            errorMessage = Loc.t(.authPasswordsMismatch)
             return false
         }
         guard password.count >= 6 else {
-            errorMessage = "Hasło musi mieć co najmniej 6 znaków."
+            errorMessage = Loc.t(.authPasswordTooShort)
             return false
         }
 
@@ -89,7 +89,7 @@ final class AuthViewModel: ObservableObject {
         do {
             try await authManager.signUp(email: email.trimmingCharacters(in: .whitespaces),
                                          password: password)
-            successMessage = "Konto utworzone. Sprawdź e-mail weryfikacyjny."
+            successMessage = Loc.t(.authAccountCreated)
             return true
         } catch let apiError as APIError {
             errorMessage = APIErrorMapper.message(for: apiError)
@@ -103,19 +103,22 @@ final class AuthViewModel: ObservableObject {
     private func validateEmailPassword() -> Bool {
         let trimmed = email.trimmingCharacters(in: .whitespaces)
         guard trimmed.contains("@"), !password.isEmpty else {
-            errorMessage = "Podaj poprawny e-mail i hasło."
+            errorMessage = Loc.t(.authInvalidEmailPassword)
             return false
         }
         return true
     }
 
     private func mapFirebaseError(_ error: Error) -> String {
+        if let social = error as? SocialAuthError {
+            return social.localizedDescription
+        }
         let ns = error as NSError
         switch ns.code {
-        case 17008: return "Nieprawidłowy adres e-mail."
-        case 17009, 17011: return "Nieprawidłowy e-mail lub hasło."
-        case 17007: return "Ten adres e-mail jest już zajęty."
-        case 17026: return "Hasło jest zbyt słabe."
+        case 17008: return Loc.t(.authInvalidEmail)
+        case 17009, 17011: return Loc.t(.authWrongCredentials)
+        case 17007: return Loc.t(.authEmailTaken)
+        case 17026: return Loc.t(.authWeakPassword)
         default: return error.localizedDescription
         }
     }

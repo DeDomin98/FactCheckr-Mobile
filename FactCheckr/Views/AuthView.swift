@@ -4,6 +4,7 @@ struct AuthView: View {
     @ObservedObject var authViewModel: AuthViewModel
     @ObservedObject var authManager: AuthManager
     var onAuthenticated: () -> Void
+    var onContinueAsGuest: (() -> Void)?
 
     enum Step { case choice, email }
 
@@ -78,6 +79,17 @@ struct AuthView: View {
             FCSecondaryButton(title: Loc.t(.continueEmail), icon: "envelope.fill") {
                 isSignUp = false
                 step = .email
+            }
+
+            if let onContinueAsGuest {
+                Button(action: onContinueAsGuest) {
+                    Text(Loc.t(.continueAsGuest))
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(FCTheme.textMuted)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                }
+                .buttonStyle(.plain)
             }
 
             if let error = authViewModel.errorMessage {

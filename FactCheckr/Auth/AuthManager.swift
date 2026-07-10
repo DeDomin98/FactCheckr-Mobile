@@ -282,7 +282,7 @@ final class AuthManager: ObservableObject {
         var errorDescription: String? {
             switch self {
             case .notConfigured:
-                return "Firebase nie jest skonfigurowany. Dodaj GoogleService-Info.plist."
+                return Loc.t(.firebaseNotConfiguredShort)
             }
         }
     }

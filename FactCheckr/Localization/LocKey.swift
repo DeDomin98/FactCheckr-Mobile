@@ -6,7 +6,7 @@ enum LocKey {
     case tabHome, tabHistory, tabAccount
 
     // Common
-    case retry, login, send, resend, cancel, logout
+    case retry, login, send, resend, cancel, logout, cancelAnalysis
 
     // Language
     case languageSystem, languageSection, languageHint
@@ -14,13 +14,19 @@ enum LocKey {
     // Home
     case homeTitle, homeSubtitle, homeUrlPlaceholder, paste, check
     case recentChecks, greetingPrefix, quotaRemainingFmt, verifyToAnalyze
-    case verifyEmailContinue, invalidUrl
+    case verifyEmailContinue, invalidUrl, quotaLoading, guestQuotaHint
+    case resendVerificationSent, resendVerificationFailed
 
     // Auth
     case authWelcomeTitle, authChoiceSubtitle, createAccount, signIn
     case authEmailSignupSub, authEmailSigninSub, continueEmail, authTerms
     case otherMethods, segLogin, segRegister, email, password, confirmPassword
     case continueApple, continueGoogle, or, firebaseNotConfigured
+    case continueAsGuest, authPasswordsMismatch, authPasswordTooShort
+    case authInvalidEmailPassword, authAccountCreated
+    case authInvalidEmail, authWrongCredentials, authEmailTaken, authWeakPassword
+    case socialAppleTokenMissing, socialGoogleTokenMissing, socialMissingClientID
+    case socialNoPresenter, socialCancelled, firebaseNotConfiguredShort
 
     // Account
     case userFallback, analysesLocked, testerMonthlyLimit, remainingAnalyses
@@ -34,7 +40,7 @@ enum LocKey {
 
     // History
     case historySearchPlaceholder, filterFavorites, filterAll
-    case addToFavorites, removeFromFavorites, deleteFromDevice
+    case addToFavorites, removeFromFavorites, deleteFromDevice, deleteFromHistory
     case historyLoading, historyEmptyTitle, historyEmptyLoggedIn, historyEmptyLoggedOut
     case historyNoResults, historyNoResultsHint
 
@@ -70,7 +76,7 @@ enum LocKey {
     case splashTagline, splashLoading, back
 
     // Result
-    case resultTitle, checkAnother, shareButton
+    case resultTitle, checkAnother, shareButton, showFullReport, hideFullReport
     case secAnalysis, secClaimsEvidence, secClaims, secSummary, secIndicators, secManipulation
     case secSourceAssessment, secMissingContext, secCorrection, secAllSources, secCategories
     case keyFindingsLabel, scoreReasoningLabel, sourcesUsedLabel
@@ -108,7 +114,10 @@ enum LocKey {
     case stageTranscribing, stageExtracting, stageResearching, stageJudging, stageScraping, stageAnalyzing
 
     // Errors
-    case errUnexpectedResponse, errNoInternet, errTimeout, errNetwork
+    case errUnexpectedResponse, errNoInternet, errTimeout, errNetwork, errAnalysisCancelled
+    case errLoginRequired, errGuestQuota, errVerifyEmail, errSecurityCheck
+    case errVideoTooLong, errTooLittleSpeech, errServiceUnavailable, errAnalysisTimeout, errUnknown
+    case errPowChallenge, errAnalysisFailed, errEmptyAnalysis, errSendVerification
 
     // Shell / misc
     case logoutConfirmTitle, welcomeNameFmt, verify, accessibilityLogout
@@ -131,6 +140,13 @@ enum LocKey {
     case shareExtNotLoggedIn, shareExtBackgroundFailed
     case bgAnalysisInflightTitle, bgAnalysisInflightMessage
 
+    // Network / offline / quota / live activity
+    case networkOnline, networkOffline, networkOfflineBanner, networkOfflineQueued
+    case offlineQueueRetry, offlineQueuePendingFmt
+    case quotaSoftWallTitle, quotaSoftWallMessage, quotaSoftWallGuest, quotaAlmostGoneFmt
+    case liveActivityStarting, liveActivityBackground, liveActivityDone, liveActivityFailed
+    case notifDeepLinkMissing, bgAnalysisDuplicate
+
     var values: (pl: String, en: String) {
         switch self {
         // Tabs
@@ -145,6 +161,7 @@ enum LocKey {
         case .resend: return ("Wyślij ponownie", "Resend")
         case .cancel: return ("Anuluj", "Cancel")
         case .logout: return ("Wyloguj się", "Sign out")
+        case .cancelAnalysis: return ("Anuluj analizę", "Cancel analysis")
 
         // Language
         case .languageSystem: return ("Systemowy", "System")
@@ -166,6 +183,12 @@ enum LocKey {
                                            "Confirm your email to keep analyzing.")
         case .invalidUrl: return ("Nieprawidłowy adres URL. Wklej link zaczynający się od https://",
                                   "Invalid URL. Paste a link starting with https://")
+        case .quotaLoading: return ("Ładowanie limitu…", "Loading quota…")
+        case .guestQuotaHint: return ("Bez konta masz 1 darmową analizę. Załóż konto, aby dostać 5.",
+                                      "Without an account you get 1 free analysis. Sign up for 5.")
+        case .resendVerificationSent: return ("Wysłaliśmy e-mail weryfikacyjny.", "Verification email sent.")
+        case .resendVerificationFailed: return ("Nie udało się wysłać e-maila. Spróbuj ponownie.",
+                                                "Couldn't send the email. Try again.")
 
         // Auth
         case .authWelcomeTitle: return ("Witaj w Fact Checkr", "Welcome to Fact Checkr")
@@ -189,6 +212,23 @@ enum LocKey {
         case .or: return ("lub", "or")
         case .firebaseNotConfigured: return ("Firebase nie jest skonfigurowany. Dodaj GoogleService-Info.plist.",
                                              "Firebase is not configured. Add GoogleService-Info.plist.")
+        case .continueAsGuest: return ("Kontynuuj bez konta", "Continue without an account")
+        case .authPasswordsMismatch: return ("Hasła nie są identyczne.", "Passwords do not match.")
+        case .authPasswordTooShort: return ("Hasło musi mieć co najmniej 6 znaków.", "Password must be at least 6 characters.")
+        case .authInvalidEmailPassword: return ("Podaj poprawny e-mail i hasło.", "Enter a valid email and password.")
+        case .authAccountCreated: return ("Konto utworzone. Sprawdź e-mail weryfikacyjny.",
+                                          "Account created. Check your verification email.")
+        case .authInvalidEmail: return ("Nieprawidłowy adres e-mail.", "Invalid email address.")
+        case .authWrongCredentials: return ("Nieprawidłowy e-mail lub hasło.", "Incorrect email or password.")
+        case .authEmailTaken: return ("Ten adres e-mail jest już zajęty.", "This email is already in use.")
+        case .authWeakPassword: return ("Hasło jest zbyt słabe.", "Password is too weak.")
+        case .socialAppleTokenMissing: return ("Nie udało się uzyskać tokenu Apple.", "Couldn't get Apple token.")
+        case .socialGoogleTokenMissing: return ("Nie udało się uzyskać tokenu Google.", "Couldn't get Google token.")
+        case .socialMissingClientID: return ("Brak konfiguracji Google (clientID).", "Missing Google configuration (clientID).")
+        case .socialNoPresenter: return ("Nie można otworzyć okna logowania.", "Can't open the sign-in window.")
+        case .socialCancelled: return ("Logowanie anulowane.", "Sign-in cancelled.")
+        case .firebaseNotConfiguredShort: return ("Firebase nie jest skonfigurowany. Dodaj GoogleService-Info.plist.",
+                                                  "Firebase is not configured. Add GoogleService-Info.plist.")
 
         // Account
         case .userFallback: return ("Użytkowniku", "there")
@@ -240,6 +280,7 @@ enum LocKey {
         case .addToFavorites: return ("Dodaj do ulubionych", "Add to favorites")
         case .removeFromFavorites: return ("Usuń z ulubionych", "Remove from favorites")
         case .deleteFromDevice: return ("Usuń z urządzenia", "Delete from device")
+        case .deleteFromHistory: return ("Usuń z historii", "Delete from history")
         case .historyLoading: return ("Wczytuję historię…", "Loading history…")
         case .historyEmptyTitle: return ("Brak historii", "No history")
         case .historyEmptyLoggedIn: return ("Twoje sprawdzenia z konta pojawią się tutaj.",
@@ -341,6 +382,8 @@ enum LocKey {
         case .resultTitle: return ("Wynik", "Result")
         case .checkAnother: return ("Sprawdź kolejny", "Check another")
         case .shareButton: return ("Udostępnij", "Share")
+        case .showFullReport: return ("Pokaż pełny raport", "Show full report")
+        case .hideFullReport: return ("Ukryj szczegóły", "Hide details")
         case .secAnalysis: return ("Analiza", "Analysis")
         case .secClaimsEvidence: return ("Twierdzenia i dowody", "Claims & evidence")
         case .secClaims: return ("Twierdzenia", "Claims")
@@ -451,6 +494,27 @@ enum LocKey {
         case .errNoInternet: return ("Brak połączenia z internetem.", "No internet connection.")
         case .errTimeout: return ("Przekroczono limit czasu. Spróbuj ponownie.", "Request timed out. Try again.")
         case .errNetwork: return ("Błąd sieci. Spróbuj ponownie.", "Network error. Try again.")
+        case .errAnalysisCancelled: return ("Analiza anulowana.", "Analysis cancelled.")
+        case .errLoginRequired: return ("Zaloguj się, aby kontynuować. Nowe konto daje 5 darmowych analiz.",
+                                        "Sign in to continue. A new account gives 5 free analyses.")
+        case .errGuestQuota: return ("Wykorzystałeś darmową analizę gościa. Utwórz konto, aby dostać 5 analiz.",
+                                     "You've used your free guest analysis. Create an account for 5 analyses.")
+        case .errVerifyEmail: return ("Potwierdź adres e-mail przed kolejną analizą.",
+                                      "Confirm your email before the next analysis.")
+        case .errSecurityCheck: return ("Weryfikacja bezpieczeństwa nie powiodła się. Spróbuj ponownie.",
+                                        "Security check failed. Try again.")
+        case .errVideoTooLong: return ("Film za długi — maksymalnie 30 minut.", "Video too long — 30 minutes max.")
+        case .errTooLittleSpeech: return ("Za mało mowy w nagraniu do analizy.", "Not enough speech in the recording to analyze.")
+        case .errServiceUnavailable: return ("Usługa analizy chwilowo niedostępna. Spróbuj za chwilę.",
+                                             "Analysis service temporarily unavailable. Try again shortly.")
+        case .errAnalysisTimeout: return ("Przekroczono limit czasu analizy. Spróbuj ponownie.",
+                                          "Analysis timed out. Try again.")
+        case .errUnknown: return ("Nieznany błąd", "Unknown error")
+        case .errPowChallenge: return ("Nie udało się pobrać wyzwania PoW", "Couldn't fetch PoW challenge")
+        case .errAnalysisFailed: return ("Analiza nie powiodła się", "Analysis failed")
+        case .errEmptyAnalysis: return ("Pusta odpowiedź analizy", "Empty analysis response")
+        case .errSendVerification: return ("Nie udało się wysłać e-maila weryfikacyjnego",
+                                           "Couldn't send verification email")
 
         // Shell / misc
         case .logoutConfirmTitle: return ("Wylogować się?", "Sign out?")
@@ -506,6 +570,30 @@ enum LocKey {
         case .bgAnalysisInflightTitle: return ("Analiza w tle", "Analysis in background")
         case .bgAnalysisInflightMessage: return ("Ten link jest już sprawdzany w tle. Dostaniesz powiadomienie, gdy wynik będzie gotowy — możesz wrócić do filmu.",
                                                   "This link is already being checked in the background. You'll get a notification when it's ready — you can go back to your video.")
+
+        case .networkOnline: return ("Online", "Online")
+        case .networkOffline: return ("Brak sieci", "Offline")
+        case .networkOfflineBanner: return ("Brak połączenia. Analiza wymaga internetu.",
+                                            "No connection. Analysis needs the internet.")
+        case .networkOfflineQueued: return ("Zapisaliśmy link. Uruchomimy analizę, gdy wróci sieć.",
+                                            "We saved the link. We'll start analysis when you're back online.")
+        case .offlineQueueRetry: return ("Spróbuj teraz", "Try now")
+        case .offlineQueuePendingFmt: return ("%d link(ów) czeka na sieć", "%d link(s) waiting for network")
+        case .quotaSoftWallTitle: return ("Limit analiz wyczerpany", "Analysis limit reached")
+        case .quotaSoftWallMessage: return ("Wykorzystałeś dostępne analizy. Załóż konto lub wróć później.",
+                                            "You've used your available analyses. Sign up or come back later.")
+        case .quotaSoftWallGuest: return ("Darmowa analiza gościa została wykorzystana. Załóż konto i zgarnij 5 analiz.",
+                                          "Your free guest analysis is used up. Sign up for 5 analyses.")
+        case .quotaAlmostGoneFmt: return ("Została %d analiza — wykorzystaj ją mądrze.",
+                                          "%d analysis left — use it wisely.")
+        case .liveActivityStarting: return ("Uruchamianie analizy…", "Starting analysis…")
+        case .liveActivityBackground: return ("Analiza w tle…", "Analyzing in background…")
+        case .liveActivityDone: return ("Wynik gotowy", "Result ready")
+        case .liveActivityFailed: return ("Analiza nie powiodła się", "Analysis failed")
+        case .notifDeepLinkMissing: return ("Wynik jest jeszcze synchronizowany. Odśwież historię za chwilę.",
+                                            "The result is still syncing. Refresh history in a moment.")
+        case .bgAnalysisDuplicate: return ("Ten link jest już w trakcie analizy.",
+                                           "This link is already being analyzed.")
         }
     }
 }

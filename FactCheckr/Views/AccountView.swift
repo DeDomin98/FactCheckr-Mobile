@@ -222,7 +222,7 @@ struct AccountView: View {
                 icon: "bolt.shield.fill",
                 iconStyle: .accent,
                 label: locked ? Loc.t(.analysesLocked) : (profile?.isTester == true ? Loc.t(.testerMonthlyLimit) : Loc.t(.remainingAnalyses)),
-                value: locked ? "0" : "\(viewModel.quotaRemaining)",
+                value: locked ? "0" : (viewModel.quotaRemaining.map(String.init) ?? "—"),
                 hint: locked ? Loc.t(.verifyToUnlock) : String(format: Loc.t(.ofAvailableFmt), viewModel.quotaLimit),
                 tokenPercent: locked ? 0 : viewModel.quotaPercent
             )
@@ -290,7 +290,7 @@ struct AccountView: View {
         FCCard {
             VStack(alignment: .leading, spacing: 10) {
                 FCSectionTitle(icon: "hand.raised.fill", title: Loc.t(.privacy))
-                Link(Loc.t(.privacyPolicy), destination: URL(string: APIConfig.privacyURL)!)
+                Link(Loc.t(.privacyPolicy), destination: APIConfig.privacyPolicyURL)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(FCTheme.accentLight)
                 Text(Loc.t(.privacyText))
@@ -308,7 +308,7 @@ struct AccountView: View {
                 Text(String(format: Loc.t(.aboutText), AppMetadata.displayName))
                     .font(.caption)
                     .foregroundStyle(FCTheme.textSecondary)
-                Link("factcheckrai.com", destination: URL(string: APIConfig.appURL)!)
+                Link("factcheckrai.com", destination: APIConfig.websiteURL)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(FCTheme.accentLight)
             }

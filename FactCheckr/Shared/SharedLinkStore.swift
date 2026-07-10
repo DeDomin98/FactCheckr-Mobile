@@ -5,7 +5,7 @@ enum ShareDeepLink {
 
     /// Otwiera główną appkę — URL jest w App Group, nie w query (unika limitów długości).
     static var openAppURL: URL {
-        URL(string: "\(scheme)://analyze")!
+        URL(string: "\(scheme)://analyze") ?? URL(fileURLWithPath: "/")
     }
 
     static func isAppOpenURL(_ url: URL) -> Bool {

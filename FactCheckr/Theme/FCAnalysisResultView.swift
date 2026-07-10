@@ -4,6 +4,8 @@ struct FCAnalysisResultView: View {
     let entry: AnalysisHistoryEntry
     var onCheckAnother: (() -> Void)?
 
+    @State private var showFullReport = false
+
     private var response: AnalysisResponse { entry.response }
     private var analysis: AnalysisResult? { response.analysis }
     private var endpoint: AnalyzeEndpoint { pickEndpoint(entry.sourceUrl) }
@@ -13,10 +15,30 @@ struct FCAnalysisResultView: View {
             FCMediaPreviewHeader(sourceUrl: entry.sourceUrl, entry: entry)
 
             if endpoint == .article {
-                FCArticleResultContent(response: response, sourceUrl: entry.sourceUrl)
+                FCArticleResultContent(response: response, sourceUrl: entry.sourceUrl, compact: !showFullReport)
             } else {
-                FCVideoResultContent(response: response, sourceUrl: entry.sourceUrl, endpoint: endpoint)
+                FCVideoResultContent(response: response, sourceUrl: entry.sourceUrl, endpoint: endpoint, compact: !showFullReport)
             }
+
+            Button {
+                withAnimation(.easeInOut(duration: 0.28)) {
+                    showFullReport.toggle()
+                }
+                Haptics.selection()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: showFullReport ? "chevron.up" : "chevron.down")
+                    Text(showFullReport ? Loc.t(.hideFullReport) : Loc.t(.showFullReport))
+                        .fontWeight(.semibold)
+                }
+                .font(.subheadline)
+                .foregroundStyle(FCTheme.accentLight)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(FCTheme.accent.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusMD, style: .continuous))
+            }
+            .buttonStyle(.plain)
 
             if let onCheckAnother {
                 FCPrimaryButton(title: Loc.t(.checkAnother), icon: "plus.magnifyingglass", action: onCheckAnother)
@@ -34,6 +56,7 @@ struct FCAnalysisResultView: View {
 struct FCArticleResultContent: View {
     let response: AnalysisResponse
     let sourceUrl: String
+    var compact: Bool = false
 
     private var analysis: AnalysisResult? { response.analysis }
     private var score: Int { analysis?.credibilityScore ?? 0 }
@@ -44,8 +67,16 @@ struct FCArticleResultContent: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             scoreRow
-            FCAnalysisBadgesRow(response: response)
-            FCAnalysisDetailSections(response: response, includeTranscript: false, scoreReasoningInHero: false)
+            if !compact {
+                FCAnalysisBadgesRow(response: response)
+                FCAnalysisDetailSections(response: response, includeTranscript: false, scoreReasoningInHero: false)
+            } else if let summary = analysis?.summary, !summary.isEmpty {
+                Text(summary.fcDisplay)
+                    .font(.system(size: 15))
+                    .foregroundStyle(FCTheme.textSecondary)
+                    .lineSpacing(4)
+                    .lineLimit(4)
+            }
         }
     }
 
@@ -126,6 +157,7 @@ struct FCVideoResultContent: View {
     let response: AnalysisResponse
     let sourceUrl: String
     let endpoint: AnalyzeEndpoint
+    var compact: Bool = false
 
     private var analysis: AnalysisResult? { response.analysis }
     private var score: Int { analysis?.credibilityScore ?? 0 }
@@ -137,8 +169,16 @@ struct FCVideoResultContent: View {
         VStack(alignment: .leading, spacing: 16) {
             scoreHero
             miniStats
-            FCAnalysisBadgesRow(response: response)
-            FCAnalysisDetailSections(response: response, includeTranscript: true, scoreReasoningInHero: true)
+            if !compact {
+                FCAnalysisBadgesRow(response: response)
+                FCAnalysisDetailSections(response: response, includeTranscript: true, scoreReasoningInHero: true)
+            } else if let summary = analysis?.summary ?? analysis?.scoreReasoning, !summary.isEmpty {
+                Text(summary.fcDisplay)
+                    .font(.system(size: 15))
+                    .foregroundStyle(FCTheme.textSecondary)
+                    .lineSpacing(4)
+                    .lineLimit(4)
+            }
         }
     }
 

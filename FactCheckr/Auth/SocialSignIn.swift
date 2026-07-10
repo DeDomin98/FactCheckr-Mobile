@@ -84,11 +84,11 @@ enum SocialAuthError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .appleTokenMissing: return "Nie udało się uzyskać tokenu Apple."
-        case .googleTokenMissing: return "Nie udało się uzyskać tokenu Google."
-        case .missingClientID: return "Brak konfiguracji Google (clientID)."
-        case .noPresenter: return "Nie można otworzyć okna logowania."
-        case .cancelled: return "Logowanie anulowane."
+        case .appleTokenMissing: return Loc.t(.socialAppleTokenMissing)
+        case .googleTokenMissing: return Loc.t(.socialGoogleTokenMissing)
+        case .missingClientID: return Loc.t(.socialMissingClientID)
+        case .noPresenter: return Loc.t(.socialNoPresenter)
+        case .cancelled: return Loc.t(.socialCancelled)
         }
     }
 }

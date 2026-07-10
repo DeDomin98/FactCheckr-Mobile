@@ -10,6 +10,7 @@ struct HomeView: View {
     var onOpenAccount: () -> Void
     @Binding var sharedURLToAnalyze: String?
     @Environment(\.scenePhase) private var scenePhase
+    @EnvironmentObject private var networkMonitor: NetworkMonitor
 
     @State private var activeEndpoint: AnalyzeEndpoint = .article
     @State private var showHomeCheckTip = ContextualTipStore.isVisible(.homeCheck)
@@ -18,60 +19,39 @@ struct HomeView: View {
     @State private var showClipboardTip = false
     @State private var dismissedClipboardURL: String?
     @State private var backgroundInflightURL: String?
+    @State private var verificationFeedback: String?
+    @State private var isResendingVerification = false
+    @State private var offlinePendingCount = OfflineAnalysisQueue.count
+    @State private var deepLinkHint: String?
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                if authManager.isLoggedIn {
-                    welcomeHeader
+                if !networkMonitor.isOnline {
+                    offlineBanner
+                } else if offlinePendingCount > 0 {
+                    offlineQueueBanner
                 }
 
-                if authManager.isLoggedIn && showShareFavoritesTip && !analyzeViewModel.isRunning {
-                    FCTipBanner(
-                        icon: "star.circle.fill",
-                        tint: FCTheme.orange,
-                        title: Loc.t(.tipShareFavoritesTitle),
-                        message: Loc.t(.tipShareFavoritesMessage)
-                    ) {
-                        showShareFavoritesTip = false
-                        ContextualTipStore.dismiss(.shareFavorites)
-                    }
-                } else if authManager.isLoggedIn && showClipboardTip && !analyzeViewModel.isRunning {
-                    FCTipBanner(
-                        icon: "doc.on.clipboard.fill",
-                        tint: FCTheme.tiktok,
-                        title: Loc.t(.tipClipboardTitle),
-                        message: Loc.t(.tipClipboardMessage),
-                        actionTitle: Loc.t(.tipClipboardAction),
-                        onAction: {
-                            homeViewModel.applyClipboardTikTokURL()
-                            showClipboardTip = false
-                            Task { await runAnalysis() }
-                        }
-                    ) {
-                        dismissedClipboardURL = homeViewModel.clipboardTikTokURL
-                        showClipboardTip = false
-                    }
-                } else if authManager.isLoggedIn && showShareTip && !analyzeViewModel.isRunning {
-                    FCTipBanner(
-                        icon: "bell.badge.fill",
-                        tint: FCTheme.green,
-                        title: Loc.t(.tipShareTitle),
-                        message: Loc.t(.tipShareMessage)
-                    ) {
-                        showShareTip = false
-                        ContextualTipStore.dismiss(.shareBackground)
-                    }
-                } else if authManager.isLoggedIn && showHomeCheckTip && !analyzeViewModel.isRunning {
-                    FCTipBanner(
-                        icon: "lightbulb.fill",
-                        tint: FCTheme.accentLight,
-                        title: Loc.t(.tipHomeTitle),
-                        message: Loc.t(.tipHomeMessage)
-                    ) {
-                        showHomeCheckTip = false
-                        ContextualTipStore.dismiss(.homeCheck)
-                    }
+                if let deepLinkHint {
+                    inlineErrorBanner(deepLinkHint)
+                }
+
+                if authManager.isLoggedIn {
+                    welcomeHeader
+                } else if !analyzeViewModel.isRunning {
+                    guestQuotaBanner
+                }
+
+                if let remaining = dashboardViewModel.quotaRemaining,
+                   !authManager.requiresEmailVerification,
+                   remaining > 0, remaining <= 1,
+                   !analyzeViewModel.isRunning {
+                    quotaWarningBanner(remaining: remaining)
+                }
+
+                if !analyzeViewModel.isRunning {
+                    tipBanners
                 }
 
                 header
@@ -91,6 +71,9 @@ struct HomeView: View {
                                 researchProgress: analyzeViewModel.researchProgress,
                                 now: analyzeViewModel.progressTick
                             )
+                            FCSecondaryButton(title: Loc.t(.cancelAnalysis), icon: "xmark.circle") {
+                                analyzeViewModel.cancel()
+                            }
                         }
                     }
                     .transition(.opacity.combined(with: .move(edge: .top)))
@@ -108,16 +91,29 @@ struct HomeView: View {
                 }
 
                 if let error = analyzeViewModel.errorMessage, !analyzeViewModel.isRunning, backgroundInflightURL == nil {
-                    inlineErrorBanner(error)
                     if analyzeViewModel.requiresLogin {
-                        FCPrimaryButton(title: Loc.t(.login), icon: "person.fill") {
-                            onLoginRequired()
+                        softWallCard(
+                            title: Loc.t(.quotaSoftWallTitle),
+                            message: authManager.isLoggedIn ? Loc.t(.quotaSoftWallMessage) : Loc.t(.quotaSoftWallGuest)
+                        ) {
+                            if authManager.isLoggedIn {
+                                FCPrimaryButton(title: Loc.t(.tabAccount), icon: "person.fill") {
+                                    onOpenAccount()
+                                }
+                            } else {
+                                FCPrimaryButton(title: Loc.t(.login), icon: "person.fill") {
+                                    onLoginRequired()
+                                }
+                            }
                         }
-                    } else if analyzeViewModel.requiresEmailVerification {
-                        emailVerificationBanner
                     } else {
-                        FCSecondaryButton(title: Loc.t(.retry), icon: "arrow.clockwise") {
-                            Task { await runAnalysis() }
+                        inlineErrorBanner(error)
+                        if analyzeViewModel.requiresEmailVerification {
+                            emailVerificationBanner
+                        } else {
+                            FCSecondaryButton(title: Loc.t(.retry), icon: "arrow.clockwise") {
+                                Task { await runAnalysis() }
+                            }
                         }
                     }
                 }
@@ -135,6 +131,7 @@ struct HomeView: View {
         .onAppear {
             homeViewModel.refreshRecent()
             refreshLoggedInHomeExtras()
+            offlinePendingCount = OfflineAnalysisQueue.count
             Task { await dashboardViewModel.refresh(authManager: authManager) }
         }
         .onChange(of: authManager.isLoggedIn) { loggedIn in
@@ -146,17 +143,34 @@ struct HomeView: View {
             }
         }
         .onChange(of: scenePhase) { phase in
-            guard phase == .active, authManager.isLoggedIn else { return }
-            homeViewModel.refreshClipboardTikTokURL()
-            refreshClipboardTipVisibility()
-            Task { await pollBackgroundResults() }
+            guard phase == .active else { return }
+            offlinePendingCount = OfflineAnalysisQueue.count
+            if authManager.isLoggedIn {
+                homeViewModel.refreshClipboardTikTokURL()
+                refreshClipboardTipVisibility()
+            }
+            Task {
+                await pollBackgroundResults()
+                await retryOfflineQueueIfNeeded()
+            }
+        }
+        .onChange(of: networkMonitor.isOnline) { online in
+            if online {
+                Task { await retryOfflineQueueIfNeeded() }
+            }
         }
         .onChange(of: sharedURLToAnalyze) { url in
             guard let url else { return }
             Task { await handleIncomingSharedURL(url) }
         }
         .onReceive(NotificationCenter.default.publisher(for: .fcOpenAnalysisResult)) { _ in
-            Task { await pollBackgroundResults() }
+            Task {
+                await pollBackgroundResults()
+                // Also surface Live Activity for any still-inflight background jobs.
+                if let url = backgroundInflightURL {
+                    AnalysisLiveActivityController.ensureForInflight(url: url, endpoint: pickEndpoint(url))
+                }
+            }
         }
     }
 
@@ -186,9 +200,7 @@ struct HomeView: View {
                     HStack(spacing: 5) {
                         Image(systemName: locked ? "lock.fill" : "bolt.shield.fill")
                             .font(.caption2)
-                        Text(locked
-                             ? Loc.t(.verifyToAnalyze)
-                             : String(format: Loc.t(.quotaRemainingFmt), dashboardViewModel.quotaRemaining, dashboardViewModel.quotaLimit))
+                        Text(quotaLabel(locked: locked))
                             .font(.caption.weight(.medium))
                     }
                     .foregroundStyle(locked ? FCTheme.orange : FCTheme.accentLight)
@@ -321,14 +333,186 @@ struct HomeView: View {
             Text(Loc.t(.verifyEmailContinue))
                 .font(.caption)
                 .foregroundStyle(FCTheme.orange)
-            FCSecondaryButton(title: Loc.t(.resend), icon: "envelope") {
-                Task { try? await authManager.resendVerificationEmail() }
+            if let verificationFeedback {
+                Text(verificationFeedback)
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(FCTheme.green)
+            }
+            FCSecondaryButton(
+                title: Loc.t(.resend),
+                icon: "envelope",
+                isLoading: isResendingVerification
+            ) {
+                Task { await resendVerification() }
             }
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(FCTheme.orange.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusSM, style: .continuous))
+    }
+
+    private var guestQuotaBanner: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "info.circle.fill")
+                .foregroundStyle(FCTheme.accentLight)
+            Text(Loc.t(.guestQuotaHint))
+                .font(.caption)
+                .foregroundStyle(FCTheme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(FCTheme.accent.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusSM, style: .continuous))
+    }
+
+    private var offlineBanner: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "wifi.slash")
+                .foregroundStyle(FCTheme.orange)
+            Text(Loc.t(.networkOfflineBanner))
+                .font(.caption)
+                .foregroundStyle(FCTheme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(FCTheme.orange.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusSM, style: .continuous))
+    }
+
+    private var offlineQueueBanner: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(String(format: Loc.t(.offlineQueuePendingFmt), offlinePendingCount))
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(FCTheme.textPrimary)
+            Text(Loc.t(.networkOfflineQueued))
+                .font(.caption)
+                .foregroundStyle(FCTheme.textSecondary)
+            FCSecondaryButton(title: Loc.t(.offlineQueueRetry), icon: "arrow.clockwise") {
+                Task { await retryOfflineQueueIfNeeded(force: true) }
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(FCTheme.accent.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusSM, style: .continuous))
+    }
+
+    private func quotaWarningBanner(remaining: Int) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "bolt.badge.clock.fill")
+                .foregroundStyle(FCTheme.orange)
+            Text(String(format: Loc.t(.quotaAlmostGoneFmt), remaining))
+                .font(.caption)
+                .foregroundStyle(FCTheme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(FCTheme.orange.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusSM, style: .continuous))
+    }
+
+    private func softWallCard<Content: View>(
+        title: String,
+        message: String,
+        @ViewBuilder actions: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(FCTheme.textPrimary)
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(FCTheme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            actions()
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(FCTheme.bgCard)
+        .overlay(
+            RoundedRectangle(cornerRadius: FCTheme.radiusMD, style: .continuous)
+                .stroke(FCTheme.orange.opacity(0.35), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: FCTheme.radiusMD, style: .continuous))
+    }
+
+    @ViewBuilder
+    private var tipBanners: some View {
+        // Priority: actionable clipboard → share tips → generic home tip
+        if authManager.isLoggedIn && showClipboardTip {
+            FCTipBanner(
+                icon: "doc.on.clipboard.fill",
+                tint: FCTheme.tiktok,
+                title: Loc.t(.tipClipboardTitle),
+                message: Loc.t(.tipClipboardMessage),
+                actionTitle: Loc.t(.tipClipboardAction),
+                onAction: {
+                    homeViewModel.applyClipboardTikTokURL()
+                    showClipboardTip = false
+                    Task { await runAnalysis() }
+                }
+            ) {
+                dismissedClipboardURL = homeViewModel.clipboardTikTokURL
+                showClipboardTip = false
+            }
+        } else if authManager.isLoggedIn && showShareTip {
+            FCTipBanner(
+                icon: "bell.badge.fill",
+                tint: FCTheme.green,
+                title: Loc.t(.tipShareTitle),
+                message: Loc.t(.tipShareMessage)
+            ) {
+                showShareTip = false
+                ContextualTipStore.dismiss(.shareBackground)
+            }
+        } else if authManager.isLoggedIn && showShareFavoritesTip {
+            FCTipBanner(
+                icon: "star.circle.fill",
+                tint: FCTheme.orange,
+                title: Loc.t(.tipShareFavoritesTitle),
+                message: Loc.t(.tipShareFavoritesMessage)
+            ) {
+                showShareFavoritesTip = false
+                ContextualTipStore.dismiss(.shareFavorites)
+            }
+        } else if authManager.isLoggedIn && showHomeCheckTip {
+            FCTipBanner(
+                icon: "lightbulb.fill",
+                tint: FCTheme.accentLight,
+                title: Loc.t(.tipHomeTitle),
+                message: Loc.t(.tipHomeMessage)
+            ) {
+                showHomeCheckTip = false
+                ContextualTipStore.dismiss(.homeCheck)
+            }
+        }
+    }
+
+    private func quotaLabel(locked: Bool) -> String {
+        if locked { return Loc.t(.verifyToAnalyze) }
+        guard let remaining = dashboardViewModel.quotaRemaining else {
+            return Loc.t(.quotaLoading)
+        }
+        return String(format: Loc.t(.quotaRemainingFmt), remaining, dashboardViewModel.quotaLimit)
+    }
+
+    private func resendVerification() async {
+        guard !isResendingVerification else { return }
+        isResendingVerification = true
+        verificationFeedback = nil
+        defer { isResendingVerification = false }
+        do {
+            try await authManager.resendVerificationEmail()
+            verificationFeedback = Loc.t(.resendVerificationSent)
+            Haptics.notify(.success)
+        } catch {
+            verificationFeedback = Loc.t(.resendVerificationFailed)
+            Haptics.notify(.error)
+        }
     }
 
     private func inlineErrorBanner(_ message: String) -> some View {
@@ -375,6 +559,14 @@ struct HomeView: View {
             return
         }
 
+        await dashboardViewModel.refresh(authManager: authManager)
+        if let entry = dashboardViewModel.history.first(where: { urlsRoughlyMatch($0.sourceUrl, url) }) {
+            backgroundInflightURL = nil
+            homeViewModel.clearInput()
+            onResult(entry)
+            return
+        }
+
         if BackgroundInflightStore.isInflight(url: url, uid: authManager.user?.uid) {
             backgroundInflightURL = url
             return
@@ -391,14 +583,15 @@ struct HomeView: View {
         if let pending = BackgroundAnalysisStore.peek(sourceUrl: url, uid: uid) {
             return pending
         }
-        return dashboardViewModel.history.first { urlsRoughlyMatch($0.sourceUrl, url) }
+        return nil
     }
 
     private func pollBackgroundResults() async {
         guard let url = backgroundInflightURL else { return }
         guard !BackgroundInflightStore.isInflight(url: url, uid: authManager.user?.uid) else { return }
 
-        if let entry = await resolveExistingResult(for: url) {
+        if let entry = await resolveExistingResult(for: url)
+            ?? dashboardViewModel.history.first(where: { urlsRoughlyMatch($0.sourceUrl, url) }) {
             backgroundInflightURL = nil
             homeViewModel.clearInput()
             onResult(entry)
@@ -407,9 +600,34 @@ struct HomeView: View {
 
     private func runAnalysis() async {
         guard let url = homeViewModel.extractedURL else { return }
+        deepLinkHint = nil
 
+        if !networkMonitor.isOnline {
+            OfflineAnalysisQueue.enqueue(url)
+            offlinePendingCount = OfflineAnalysisQueue.count
+            analyzeViewModel.errorMessage = Loc.t(.networkOfflineQueued)
+            analyzeViewModel.requiresLogin = false
+            analyzeViewModel.requiresEmailVerification = false
+            Haptics.notify(.warning)
+            return
+        }
+
+        // Soft-wall: known zero quota before hitting the API.
+        if authManager.isLoggedIn,
+           !authManager.requiresEmailVerification,
+           let remaining = dashboardViewModel.quotaRemaining,
+           remaining <= 0 {
+            analyzeViewModel.errorMessage = Loc.t(.quotaSoftWallMessage)
+            analyzeViewModel.requiresLogin = true
+            return
+        }
+
+        // Only reuse a result that just finished in the background — never block
+        // an intentional re-check of a URL already in history.
         if let entry = await resolveExistingResult(for: url) {
             backgroundInflightURL = nil
+            OfflineAnalysisQueue.dequeue(url)
+            offlinePendingCount = OfflineAnalysisQueue.count
             homeViewModel.clearInput()
             onResult(entry)
             return
@@ -417,6 +635,7 @@ struct HomeView: View {
 
         if BackgroundInflightStore.isInflight(url: url, uid: authManager.user?.uid) {
             backgroundInflightURL = url
+            AnalysisLiveActivityController.ensureForInflight(url: url, endpoint: pickEndpoint(url))
             return
         }
 
@@ -426,6 +645,8 @@ struct HomeView: View {
         await analyzeViewModel.analyze(url: url, endpoint: activeEndpoint, authManager: authManager)
 
         if let result = analyzeViewModel.result {
+            OfflineAnalysisQueue.dequeue(url)
+            offlinePendingCount = OfflineAnalysisQueue.count
             await saveAndPresentResult(url: url, result: result)
             return
         }
@@ -438,6 +659,17 @@ struct HomeView: View {
             homeViewModel.clearInput()
             onResult(entry)
         }
+    }
+
+    private func retryOfflineQueueIfNeeded(force: Bool = false) async {
+        guard networkMonitor.isOnline || force else { return }
+        guard let url = OfflineAnalysisQueue.peek() else {
+            offlinePendingCount = 0
+            return
+        }
+        homeViewModel.urlText = url
+        await runAnalysis()
+        offlinePendingCount = OfflineAnalysisQueue.count
     }
 
     private func saveAndPresentResult(url: String, result: AnalysisResponse) async {

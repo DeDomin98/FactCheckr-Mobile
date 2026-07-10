@@ -20,8 +20,8 @@ struct FactCheckrApp: App {
                 .environmentObject(shareLinkHandler)
                 .environmentObject(localization)
                 .environment(\.locale, Locale(identifier: localization.code))
+                .environmentObject(NetworkMonitor.shared)
                 .id(localization.language)
-                .preferredColorScheme(.dark)
                 .onOpenURL { url in
                     if authManager.handleURL(url) { return }
                     shareLinkHandler.handleIncomingURL(url)

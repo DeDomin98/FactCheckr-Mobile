@@ -7,6 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+
+		F100000000000000000000B1 /* FactCheckrWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F200000000000000000000B1 /* FactCheckrWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F100000000000000000000B2 /* FactCheckrWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000000000000B2 /* FactCheckrWidgetsBundle.swift */; };
+		F100000000000000000000B3 /* AnalysisActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000000000000B5 /* AnalysisActivityAttributes.swift */; };
+		F100000000000000000000B4 /* URLDetect.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000004 /* URLDetect.swift */; };
+		F100000000000000000000B5 /* AnalysisLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000000000000B6 /* AnalysisLiveActivity.swift */; };
+		F100000000000000000000B6 /* AnalysisActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000000000000B5 /* AnalysisActivityAttributes.swift */; };
+		F100000000000000000000B7 /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000000000000B7 /* NetworkMonitor.swift */; };
+		F100000000000000000000B8 /* OfflineAnalysisQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = F200000000000000000000B8 /* OfflineAnalysisQueue.swift */; };
 		F10000000000000000000001 /* FactCheckrApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000001 /* FactCheckrApp.swift */; };
 		F10000000000000000000002 /* APIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000002 /* APIConfig.swift */; };
 		F10000000000000000000003 /* PoW.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000003 /* PoW.swift */; };
@@ -19,11 +28,8 @@
 		F1000000000000000000000A /* AnalyzeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000000A /* AnalyzeViewModel.swift */; };
 		F1000000000000000000000B /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000000B /* AuthViewModel.swift */; };
 		F1000000000000000000000C /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000000C /* HomeView.swift */; };
-		F1000000000000000000000D /* AnalyzeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000000D /* AnalyzeView.swift */; };
 		F1000000000000000000000E /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000000E /* ResultView.swift */; };
 		F1000000000000000000000F /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000000F /* LoginView.swift */; };
-		F10000000000000000000010 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000010 /* RegisterView.swift */; };
-		F10000000000000000000011 /* VerifyEmailInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000011 /* VerifyEmailInfoView.swift */; };
 		F10000000000000000000013 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000013 /* Assets.xcassets */; };
 		F10000000000000000000015 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = F50000000000000000000002 /* FirebaseAuth */; };
 		F10000000000000000000016 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000016 /* GoogleService-Info.plist */; };
@@ -43,14 +49,12 @@
 		F10000000000000000000024 /* UserProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000024 /* UserProfileService.swift */; };
 		F10000000000000000000025 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000025 /* DashboardViewModel.swift */; };
 		F10000000000000000000026 /* FCDashboardComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000026 /* FCDashboardComponents.swift */; };
-		F10000000000000000000027 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000027 /* DashboardView.swift */; };
 		F10000000000000000000028 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000028 /* AccountView.swift */; };
 		F10000000000000000000029 /* AppShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000029 /* AppShellView.swift */; };
 		F1000000000000000000002A /* ReportDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000002A /* ReportDetailView.swift */; };
 		F1000000000000000000002B /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = F50000000000000000000003 /* FirebaseFirestore */; };
 		F10000000000000000000031 /* AppMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000002B /* AppMetadata.swift */; };
 		F10000000000000000000032 /* AppGroupConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000002C /* AppGroupConfig.swift */; };
-		F10000000000000000000033 /* EmptyResultFallback.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000002D /* EmptyResultFallback.swift */; };
 		F10000000000000000000034 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000002E /* PrivacyInfo.xcprivacy */; };
 		F10000000000000000000035 /* AppGroupConfig.swift in ShareExtension Sources */ = {isa = PBXBuildFile; fileRef = F2000000000000000000002C /* AppGroupConfig.swift */; };
 		F10000000000000000000036 /* AppRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20000000000000000000036 /* AppRoute.swift */; };
@@ -107,6 +111,15 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+
+		F200000000000000000000B1 /* FactCheckrWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FactCheckrWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F200000000000000000000B2 /* FactCheckrWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FactCheckrWidgetsBundle.swift; sourceTree = "<group>"; };
+		F200000000000000000000B3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F200000000000000000000B4 /* FactCheckrWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FactCheckrWidgets.entitlements; sourceTree = "<group>"; };
+		F200000000000000000000B5 /* AnalysisActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisActivityAttributes.swift; sourceTree = "<group>"; };
+		F200000000000000000000B6 /* AnalysisLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisLiveActivity.swift; sourceTree = "<group>"; };
+		F200000000000000000000B7 /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
+		F200000000000000000000B8 /* OfflineAnalysisQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineAnalysisQueue.swift; sourceTree = "<group>"; };
 		F20000000000000000000001 /* FactCheckrApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FactCheckrApp.swift; sourceTree = "<group>"; };
 		F20000000000000000000002 /* APIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfig.swift; sourceTree = "<group>"; };
 		F20000000000000000000003 /* PoW.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoW.swift; sourceTree = "<group>"; };
@@ -119,11 +132,8 @@
 		F2000000000000000000000A /* AnalyzeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyzeViewModel.swift; sourceTree = "<group>"; };
 		F2000000000000000000000B /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
 		F2000000000000000000000C /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
-		F2000000000000000000000D /* AnalyzeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyzeView.swift; sourceTree = "<group>"; };
 		F2000000000000000000000E /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
 		F2000000000000000000000F /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
-		F20000000000000000000010 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
-		F20000000000000000000011 /* VerifyEmailInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerifyEmailInfoView.swift; sourceTree = "<group>"; };
 		F20000000000000000000013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F20000000000000000000015 /* FactCheckr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FactCheckr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F20000000000000000000016 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -149,13 +159,11 @@
 		F20000000000000000000024 /* UserProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileService.swift; sourceTree = "<group>"; };
 		F20000000000000000000025 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
 		F20000000000000000000026 /* FCDashboardComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FCDashboardComponents.swift; sourceTree = "<group>"; };
-		F20000000000000000000027 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		F20000000000000000000028 /* AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
 		F20000000000000000000029 /* AppShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShellView.swift; sourceTree = "<group>"; };
 		F2000000000000000000002A /* ReportDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportDetailView.swift; sourceTree = "<group>"; };
 		F2000000000000000000002B /* AppMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMetadata.swift; sourceTree = "<group>"; };
 		F2000000000000000000002C /* AppGroupConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroupConfig.swift; sourceTree = "<group>"; };
-		F2000000000000000000002D /* EmptyResultFallback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyResultFallback.swift; sourceTree = "<group>"; };
 		F2000000000000000000002E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F20000000000000000000036 /* AppRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRoute.swift; sourceTree = "<group>"; };
 		F20000000000000000000037 /* OnboardingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingStore.swift; sourceTree = "<group>"; };
@@ -211,14 +219,34 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+
+		F300000000000000000000B1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+
+		F400000000000000000000B1 /* FactCheckrWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				F200000000000000000000B2 /* FactCheckrWidgetsBundle.swift */,
+				F200000000000000000000B3 /* Info.plist */,
+				F200000000000000000000B4 /* FactCheckrWidgets.entitlements */,
+			);
+			path = FactCheckrWidgets;
+			sourceTree = "<group>";
+		};
 		F40000000000000000000001 = {
 			isa = PBXGroup;
 			children = (
 				F40000000000000000000002 /* FactCheckr */,
 				F4000000000000000000000C /* FactCheckrShare */,
+				F400000000000000000000B1 /* FactCheckrWidgets */,
 				F40000000000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -251,6 +279,7 @@
 			children = (
 				F20000000000000000000015 /* FactCheckr.app */,
 				F2000000000000000000001E /* FactCheckrShare.appex */,
+				F200000000000000000000B1 /* FactCheckrWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -297,6 +326,8 @@
 				F20000000000000000000099 /* LocalUserDataCleaner.swift */,
 				F20000000000000000000037 /* OnboardingStore.swift */,
 				F20000000000000000000088 /* ContextualTipStore.swift */,
+				F200000000000000000000B7 /* NetworkMonitor.swift */,
+				F200000000000000000000B8 /* OfflineAnalysisQueue.swift */,
 				F200000000000000000000A0 /* PostLoginTutorialStore.swift */,
 				F200000000000000000000A1 /* DemoAnalysisProvider.swift */,
 			);
@@ -327,16 +358,11 @@
 			isa = PBXGroup;
 			children = (
 				F2000000000000000000000C /* HomeView.swift */,
-				F2000000000000000000000D /* AnalyzeView.swift */,
 				F2000000000000000000000E /* ResultView.swift */,
 				F2000000000000000000000F /* LoginView.swift */,
-				F20000000000000000000010 /* RegisterView.swift */,
-				F20000000000000000000011 /* VerifyEmailInfoView.swift */,
-				F20000000000000000000027 /* DashboardView.swift */,
 				F20000000000000000000028 /* AccountView.swift */,
 				F20000000000000000000029 /* AppShellView.swift */,
 				F2000000000000000000002A /* ReportDetailView.swift */,
-				F2000000000000000000002D /* EmptyResultFallback.swift */,
 				F20000000000000000000038 /* OnboardingView.swift */,
 				F200000000000000000000A2 /* PostLoginTutorialView.swift */,
 				F20000000000000000000039 /* AuthView.swift */,
@@ -390,6 +416,8 @@
 				F20000000000000000000060 /* AppGroupTokenStore.swift */,
 				F20000000000000000000061 /* BackgroundAnalysisStore.swift */,
 				F200000000000000000000A3 /* BackgroundInflightStore.swift */,
+				F200000000000000000000B5 /* AnalysisActivityAttributes.swift */,
+				F200000000000000000000B6 /* AnalysisLiveActivity.swift */,
 				F20000000000000000000062 /* BackgroundAnalysisService.swift */,
 				F20000000000000000000085 /* MediaPreviewHelper.swift */,
 				F20000000000000000000097 /* MediaPreviewCache.swift */,
@@ -420,6 +448,14 @@
 			remoteGlobalIDString = F60000000000000000000004;
 			remoteInfo = FactCheckrShare;
 		};
+
+		FA000000000000000000000B1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F80000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F600000000000000000000B1;
+			remoteInfo = FactCheckrWidgets;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXNativeTarget section */
@@ -436,6 +472,7 @@
 			);
 			dependencies = (
 				FA00000000000000000000002 /* PBXTargetDependency */,
+				FA000000000000000000000B2 /* PBXTargetDependency */,
 			);
 			name = FactCheckr;
 			packageProductDependencies = (
@@ -465,6 +502,24 @@
 			productReference = F2000000000000000000001E /* FactCheckrShare.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+
+		F600000000000000000000B1 /* FactCheckrWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F700000000000000000000B1 /* Build configuration list for PBXNativeTarget "FactCheckrWidgets" */;
+			buildPhases = (
+				F600000000000000000000B2 /* Sources */,
+				F300000000000000000000B1 /* Frameworks */,
+				F600000000000000000000B3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FactCheckrWidgets;
+			productName = FactCheckrWidgets;
+			productReference = F200000000000000000000B1 /* FactCheckrWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -475,6 +530,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				F1000000000000000000001D /* FactCheckrShare.appex in Embed Foundation Extensions */,
+				F100000000000000000000B1 /* FactCheckrWidgets.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -486,6 +542,12 @@
 			isa = PBXTargetDependency;
 			target = F60000000000000000000004 /* FactCheckrShare */;
 			targetProxy = FA00000000000000000000001 /* PBXContainerItemProxy */;
+		};
+
+		FA000000000000000000000B2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F600000000000000000000B1 /* FactCheckrWidgets */;
+			targetProxy = FA000000000000000000000B1 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -501,6 +563,9 @@
 						CreatedOnToolsVersion = 16.2;
 					};
 					F60000000000000000000004 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+					F600000000000000000000B1 = {
 						CreatedOnToolsVersion = 16.2;
 					};
 				};
@@ -525,6 +590,7 @@
 			targets = (
 				F60000000000000000000001 /* FactCheckr */,
 				F60000000000000000000004 /* FactCheckrShare */,
+				F600000000000000000000B1 /* FactCheckrWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -549,6 +615,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+
+		F600000000000000000000B3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -568,11 +642,8 @@
 				F1000000000000000000000A /* AnalyzeViewModel.swift in Sources */,
 				F1000000000000000000000B /* AuthViewModel.swift in Sources */,
 				F1000000000000000000000C /* HomeView.swift in Sources */,
-				F1000000000000000000000D /* AnalyzeView.swift in Sources */,
 				F1000000000000000000000E /* ResultView.swift in Sources */,
 				F1000000000000000000000F /* LoginView.swift in Sources */,
-				F10000000000000000000010 /* RegisterView.swift in Sources */,
-				F10000000000000000000011 /* VerifyEmailInfoView.swift in Sources */,
 				F10000000000000000000017 /* FCTheme.swift in Sources */,
 				F10000000000000000000103 /* FCAdaptiveChrome.swift in Sources */,
 				F10000000000000000000018 /* FCComponents.swift in Sources */,
@@ -585,13 +656,11 @@
 				F10000000000000000000099 /* LocalUserDataCleaner.swift in Sources */,
 				F10000000000000000000025 /* DashboardViewModel.swift in Sources */,
 				F10000000000000000000026 /* FCDashboardComponents.swift in Sources */,
-				F10000000000000000000027 /* DashboardView.swift in Sources */,
 				F10000000000000000000028 /* AccountView.swift in Sources */,
 				F10000000000000000000029 /* AppShellView.swift in Sources */,
 				F1000000000000000000002A /* ReportDetailView.swift in Sources */,
 				F10000000000000000000031 /* AppMetadata.swift in Sources */,
 				F10000000000000000000032 /* AppGroupConfig.swift in Sources */,
-				F10000000000000000000033 /* EmptyResultFallback.swift in Sources */,
 				F10000000000000000000036 /* AppRoute.swift in Sources */,
 				F10000000000000000000037 /* OnboardingStore.swift in Sources */,
 				F10000000000000000000038 /* OnboardingView.swift in Sources */,
@@ -624,6 +693,10 @@
 				F100000000000000000000A1 /* DemoAnalysisProvider.swift in Sources */,
 				F100000000000000000000A2 /* PostLoginTutorialView.swift in Sources */,
 				F100000000000000000000A3 /* BackgroundInflightStore.swift in Sources */,
+				F100000000000000000000B5 /* AnalysisLiveActivity.swift in Sources */,
+				F100000000000000000000B6 /* AnalysisActivityAttributes.swift in Sources */,
+				F100000000000000000000B7 /* NetworkMonitor.swift in Sources */,
+				F100000000000000000000B8 /* OfflineAnalysisQueue.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -650,6 +723,16 @@
 				F10000000000000000000096 /* FCTextFormat.swift in ShareExtension Sources */,
 				F10000000000000000000098 /* MediaPreviewCache.swift in ShareExtension Sources */,
 				F100000000000000000000A4 /* BackgroundInflightStore.swift in ShareExtension Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+
+		F600000000000000000000B2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F100000000000000000000B2 /* FactCheckrWidgetsBundle.swift in Sources */,
+				F100000000000000000000B3 /* AnalysisActivityAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -816,6 +899,61 @@
 			};
 			name = Release;
 		};
+
+		F900000000000000000000B1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = FactCheckrWidgets/FactCheckrWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = NNNUY4G9BY;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FactCheckrWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FactCheckr;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.factcheckr.ios.FactCheckrWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		F900000000000000000000B2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = FactCheckrWidgets/FactCheckrWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = NNNUY4G9BY;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FactCheckrWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FactCheckr;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.factcheckr.ios.FactCheckrWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -842,6 +980,16 @@
 			buildConfigurations = (
 				F90000000000000000000005 /* Debug */,
 				F90000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+
+		F700000000000000000000B1 /* Build configuration list for PBXNativeTarget "FactCheckrWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F900000000000000000000B1 /* Debug */,
+				F900000000000000000000B2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

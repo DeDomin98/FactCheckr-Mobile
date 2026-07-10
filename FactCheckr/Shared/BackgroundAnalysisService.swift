@@ -52,6 +52,11 @@ final class BackgroundAnalysisService: NSObject {
             return .started
         }
 
+        // Avoid duplicate background uploads for the same URL.
+        if BackgroundInflightStore.isInflight(url: trimmed, uid: auth.uid) {
+            return .started
+        }
+
         let endpoint = pickEndpoint(trimmed)
 
         guard let pow = await solveChallenge() else { return .failed }
@@ -69,9 +74,10 @@ final class BackgroundAnalysisService: NSObject {
         if endpoint == .article { body["model"] = APIConfig.articleModel }
 
         guard let bodyData = try? JSONSerialization.data(withJSONObject: body),
-              let fileURL = writeBodyFile(bodyData) else { return .failed }
+              let fileURL = writeBodyFile(bodyData),
+              let requestURL = URL(string: "\(APIConfig.baseURL)\(endpoint.path)") else { return .failed }
 
-        var req = URLRequest(url: URL(string: "\(APIConfig.baseURL)\(endpoint.path)")!)
+        var req = URLRequest(url: requestURL)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue("text/x-ndjson", forHTTPHeaderField: "Accept")
@@ -167,6 +173,9 @@ final class BackgroundAnalysisService: NSObject {
         let endpoint = AnalyzeEndpoint(metaValue: meta.endpoint)
         let entry = AnalysisHistoryEntry(sourceUrl: meta.url, endpoint: endpoint, response: response)
         BackgroundAnalysisStore.add(entry: entry, uid: meta.uid)
+        // Keep deep-link payload ready even before the user taps the notification
+        // (covers the case when the app is already open / relaunched).
+        NotificationDeepLinkStore.saveReady(entryId: entry.id, uid: meta.uid, sourceUrl: meta.url)
         SharedLinkStore.clearPendingURL()
         UserDefaults(suiteName: AppGroupConfig.identifier)?.set(true, forKey: "fc_tip_share_eligible")
 
@@ -183,9 +192,19 @@ final class BackgroundAnalysisService: NSObject {
         }
 
         SharedLinkStore.savePendingURL(meta.url)
-        let message = statusCode == 401 || statusCode == 402
-            ? Loc.t(.notifBackgroundAuthFail)
-            : Loc.t(.notifBackgroundFail)
+        let message: String
+        switch statusCode {
+        case 401, 402:
+            message = Loc.t(.notifBackgroundAuthFail)
+        case 403:
+            message = Loc.t(.errVerifyEmail)
+        case 422:
+            message = Loc.t(.errVideoTooLong)
+        case 504, 599:
+            message = Loc.t(.errTimeout)
+        default:
+            message = Loc.t(.notifBackgroundFail)
+        }
         NotificationService.postAnalysisFailed(url: meta.url, message: message)
     }
 
@@ -232,6 +251,8 @@ extension BackgroundAnalysisService: URLSessionDataDelegate {
             #if DEBUG
             print("[BackgroundAnalysis] missing task meta — completion dropped")
             #endif
+            // Best-effort: clear any stale inflight markers so Home doesn't hang forever.
+            BackgroundInflightStore.removeExpired()
             return
         }
 

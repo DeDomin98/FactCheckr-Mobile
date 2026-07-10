@@ -30,13 +30,22 @@ struct AppShellView: View {
                     }
                     .transition(.opacity.combined(with: .scale(scale: 0.98)))
                 } else if showAuthGate {
-                    AuthView(authViewModel: authViewModel, authManager: authManager) {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            showAuthGate = false
+                    AuthView(
+                        authViewModel: authViewModel,
+                        authManager: authManager,
+                        onAuthenticated: {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                showAuthGate = false
+                            }
+                            requestPermissionsAfterLogin()
+                            checkPostLoginTutorial()
+                        },
+                        onContinueAsGuest: {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                showAuthGate = false
+                            }
                         }
-                        requestPermissionsAfterLogin()
-                        checkPostLoginTutorial()
-                    }
+                    )
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else {
                     mainShell
@@ -87,6 +96,13 @@ struct AppShellView: View {
             Task {
                 await authManager.refreshSharedToken()
                 await dashboardViewModel.refresh(authManager: authManager)
+                await handleNotificationDeepLink()
+                // Resume Live Activity UI for any still-running background jobs.
+                if let uid = authManager.user?.uid {
+                    for url in BackgroundInflightStore.allInflight(uid: uid) {
+                        AnalysisLiveActivityController.ensureForInflight(url: url, endpoint: pickEndpoint(url))
+                    }
+                }
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .fcOpenAnalysisResult)) { _ in
@@ -134,7 +150,9 @@ struct AppShellView: View {
         .confirmationDialog(Loc.t(.logoutConfirmTitle), isPresented: $showLogoutConfirm, titleVisibility: .visible) {
             Button(Loc.t(.logout), role: .destructive) {
                 try? authManager.signOut()
-                showAuthGate = authManager.isConfigured
+                // Stay in the main shell as guest — don't trap behind auth.
+                showAuthGate = false
+                selectedTab = .home
             }
             Button(Loc.t(.cancel), role: .cancel) {}
         }
@@ -160,10 +178,14 @@ struct AppShellView: View {
     private func checkPostLoginTutorial() {
         Task {
             // ensureUserProfile (social sign-up) may still be writing the pending flag.
-            try? await Task.sleep(nanoseconds: 650_000_000)
-            guard let uid = authManager.user?.uid,
-                  PostLoginTutorialStore.shouldShow(for: uid) else { return }
-            showPostLoginTutorial = true
+            for _ in 0..<8 {
+                if let uid = authManager.user?.uid,
+                   PostLoginTutorialStore.shouldShow(for: uid) {
+                    showPostLoginTutorial = true
+                    return
+                }
+                try? await Task.sleep(nanoseconds: 200_000_000)
+            }
         }
     }
 
@@ -219,7 +241,7 @@ struct AppShellView: View {
                 onVerifyEmail: { showAuthGate = true },
                 onCheckLink: { selectedTab = .home },
                 onAccountDeleted: {
-                    showAuthGate = authManager.isConfigured
+                    showAuthGate = false
                     selectedTab = .home
                 }
             )
@@ -247,8 +269,17 @@ struct AppShellView: View {
 
     private func bootstrapIfNeeded() {
         Task {
-            try? await Task.sleep(nanoseconds: 1_050_000_000)
-            withAnimation(.easeOut(duration: 0.45)) {
+            // Wait for auth restore, with a short floor so the splash doesn't flash.
+            let started = Date()
+            while !authManager.isAuthStateReady {
+                try? await Task.sleep(nanoseconds: 50_000_000)
+                if Date().timeIntervalSince(started) > 2.0 { break }
+            }
+            let elapsed = Date().timeIntervalSince(started)
+            if elapsed < 0.45 {
+                try? await Task.sleep(nanoseconds: UInt64((0.45 - elapsed) * 1_000_000_000))
+            }
+            withAnimation(.easeOut(duration: 0.35)) {
                 isBootstrapping = false
             }
         }
@@ -270,9 +301,30 @@ struct AppShellView: View {
 
         guard let pending = NotificationDeepLinkStore.peekReady() else { return }
 
-        if showAuthGate { return }
+        if showAuthGate {
+            // Keep pending until the user finishes auth / continues as guest.
+            return
+        }
 
-        guard let uid = authManager.user?.uid, pending.uid == uid else { return }
+        // Wait briefly for auth restore if the app was cold-started from a notification.
+        if !authManager.isAuthStateReady {
+            for _ in 0..<20 {
+                if authManager.isAuthStateReady { break }
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+        }
+
+        guard let uid = authManager.user?.uid else {
+            // Not logged in — keep the deep link and open auth so the user can continue.
+            showAuthGate = authManager.isConfigured
+            return
+        }
+
+        guard pending.uid == uid else {
+            // Wrong account — clear stale payload to avoid a loop.
+            NotificationDeepLinkStore.clear()
+            return
+        }
 
         await dashboardViewModel.refresh(authManager: authManager)
 
@@ -284,9 +336,32 @@ struct AppShellView: View {
                 ?? dashboardViewModel.history.first { urlsRoughlyMatch($0.sourceUrl, sourceUrl) }
         }
 
-        guard let entry else { return }
+        // One short retry — background store may still be writing.
+        if entry == nil {
+            try? await Task.sleep(nanoseconds: 400_000_000)
+            await dashboardViewModel.refresh(authManager: authManager)
+            entry = dashboardViewModel.history.first(where: { $0.id == pending.entryId })
+            if entry == nil, let sourceUrl = pending.sourceUrl {
+                entry = BackgroundAnalysisStore.peek(sourceUrl: sourceUrl, uid: uid)
+                    ?? dashboardViewModel.history.first { urlsRoughlyMatch($0.sourceUrl, sourceUrl) }
+            }
+        }
+
+        guard let entry else {
+            // Don't clear — user can pull-to-refresh history; surface a hint via pending URL.
+            if let sourceUrl = pending.sourceUrl {
+                selectedTab = .home
+                sharedURLToAnalyze = sourceUrl
+            }
+            return
+        }
 
         NotificationDeepLinkStore.clear()
+        AnalysisLiveActivityController.complete(
+            url: entry.sourceUrl,
+            success: true,
+            message: Loc.t(.liveActivityDone)
+        )
         selectedTab = .home
         path.append(AppRoute.result(entry))
     }

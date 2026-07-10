@@ -136,9 +136,11 @@ final class ShareViewController: UIViewController {
         let selector = NSSelectorFromString("openURL:")
         while let current = responder {
             if current.responds(to: selector), current.isKind(of: UIApplication.self) {
-                let app = current as! UIApplication
-                app.open(url, options: [:], completionHandler: nil)
-                return true
+                // Avoid force-cast crash if the responder chain shape changes.
+                if let app = current as? UIApplication {
+                    app.open(url, options: [:], completionHandler: nil)
+                    return true
+                }
             }
             responder = current.next
         }

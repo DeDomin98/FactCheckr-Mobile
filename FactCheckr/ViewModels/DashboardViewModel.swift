@@ -7,12 +7,7 @@ enum ThreatFilter: String, CaseIterable {
     case high
 
     var label: String {
-        switch self {
-        case .all: return "Wszystkie"
-        case .none: return ThreatLevel.none.label
-        case .medium: return ThreatLevel.medium.label
-        case .high: return ThreatLevel.high.label
-        }
+        localizedLabel
     }
 
     var localizedLabel: String {
@@ -73,8 +68,8 @@ final class DashboardViewModel: ObservableObject {
         }
     }
 
-    var quotaRemaining: Int {
-        guard let profile else { return 0 }
+    var quotaRemaining: Int? {
+        guard let profile else { return nil }
         if profile.isTester {
             let month = String(Date().formatted(.iso8601.year().month()))
             let used = profile.monthlyAnalysisMonth == month ? (profile.monthlyAnalysesUsed ?? 0) : 0
@@ -89,8 +84,8 @@ final class DashboardViewModel: ObservableObject {
     }
 
     var quotaPercent: Double {
-        guard quotaLimit > 0 else { return 0 }
-        return min(Double(quotaRemaining) / Double(quotaLimit), 1)
+        guard let remaining = quotaRemaining, quotaLimit > 0 else { return 0 }
+        return min(Double(remaining) / Double(quotaLimit), 1)
     }
 
     func refresh(authManager: AuthManager) async {
@@ -100,10 +95,8 @@ final class DashboardViewModel: ObservableObject {
 
         if let user = authManager.user {
             let uid = user.uid
-            // Scope local history to this account before anything else.
             AnalysisHistoryStore.shared.activeUID = uid
             FavoritesStore.shared.activeUID = uid
-            // Pull in any results produced in the background by the share extension.
             for entry in BackgroundAnalysisStore.consume(uid: uid) {
                 AnalysisHistoryStore.shared.save(entry, uid: uid)
             }
@@ -119,16 +112,11 @@ final class DashboardViewModel: ObservableObject {
             let remote = await UserProfileService.shared.fetchRemoteHistory(uid: uid)
             profile = fetchedProfile
 
-            if !remote.isEmpty {
-                // Remote (account) history is the source of truth; keep only local
-                // entries that are not represented remotely yet.
-                let extras = items.filter { local in
-                    !remote.contains { $0.sourceUrl == local.sourceUrl }
-                }
-                items = (remote + extras).sorted { $0.createdAt > $1.createdAt }
+            if !NetworkMonitor.shared.isOnline {
+                syncError = Loc.t(.networkOfflineBanner)
             }
 
-            history = items
+            history = Self.mergeHistory(local: items, remote: remote, uid: uid)
         } else {
             AnalysisHistoryStore.shared.activeUID = nil
             FavoritesStore.shared.activeUID = nil
@@ -139,10 +127,58 @@ final class DashboardViewModel: ObservableObject {
         favoriteIds = FavoritesStore.shared.ids()
     }
 
+    /// Prefer newer entries per URL; respect local delete tombstones so remote
+    /// copies don't resurrect removed checks. A newer local re-check wins over remote.
+    static func mergeHistory(
+        local: [AnalysisHistoryEntry],
+        remote: [AnalysisHistoryEntry],
+        uid: String
+    ) -> [AnalysisHistoryEntry] {
+        let deletedIds = AnalysisHistoryStore.shared.deletedIds(uid: uid)
+        let deletedUrls = AnalysisHistoryStore.shared.deletedUrls(uid: uid)
+        let localIds = Set(local.map(\.id))
+
+        var bestByURL: [String: AnalysisHistoryEntry] = [:]
+
+        func consider(_ entry: AnalysisHistoryEntry, isLocal: Bool) {
+            if deletedIds.contains(entry.id) { return }
+            // Tombstones block stale remote copies. Local re-checks clear the
+            // URL tombstone on save, so they are allowed through.
+            if !isLocal, deletedUrls.contains(entry.sourceUrl), !localIds.contains(entry.id) {
+                return
+            }
+            if let existing = bestByURL[entry.sourceUrl] {
+                if entry.createdAt > existing.createdAt {
+                    bestByURL[entry.sourceUrl] = entry
+                }
+            } else {
+                bestByURL[entry.sourceUrl] = entry
+            }
+        }
+
+        for entry in local { consider(entry, isLocal: true) }
+        for entry in remote { consider(entry, isLocal: false) }
+
+        return bestByURL.values.sorted { $0.createdAt > $1.createdAt }
+    }
+
     func deleteEntry(_ id: String) {
+        let entry = history.first { $0.id == id }
         AnalysisHistoryStore.shared.delete(id: id)
         history.removeAll { $0.id == id }
         if expandedId == id { expandedId = nil }
+        FavoritesStore.shared.remove(id: id)
+        favoriteIds.remove(id)
+
+        if let entry, let uid = AnalysisHistoryStore.shared.activeUID {
+            Task {
+                try? await UserProfileService.shared.deleteAnalysis(
+                    uid: uid,
+                    entryId: entry.id,
+                    sourceUrl: entry.sourceUrl
+                )
+            }
+        }
     }
 
     func clearLocalHistory() {

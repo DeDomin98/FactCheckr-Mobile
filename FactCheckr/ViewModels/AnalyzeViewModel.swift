@@ -15,8 +15,42 @@ final class AnalyzeViewModel: ObservableObject {
 
     private var progressTimer: Timer?
     private var activeEndpoint: AnalyzeEndpoint = .article
+    private var analysisTask: Task<Void, Never>?
+    private var analysisGeneration = 0
+    private var wasCancelled = false
 
     func analyze(url: String, endpoint: AnalyzeEndpoint, authManager: AuthManager) async {
+        analysisTask?.cancel()
+        wasCancelled = false
+        analysisGeneration += 1
+        let generation = analysisGeneration
+
+        let task = Task { @MainActor in
+            await runAnalysis(url: url, endpoint: endpoint, authManager: authManager, generation: generation)
+        }
+        analysisTask = task
+        await task.value
+        if analysisGeneration == generation {
+            analysisTask = nil
+        }
+    }
+
+    func cancel() {
+        guard isRunning else { return }
+        wasCancelled = true
+        analysisGeneration += 1
+        analysisTask?.cancel()
+        analysisTask = nil
+        stopProgressTimer()
+        markActiveStageError()
+        isRunning = false
+        errorMessage = Loc.t(.errAnalysisCancelled)
+        result = nil
+        AnalysisLiveActivityController.endAll()
+        Haptics.selection()
+    }
+
+    private func runAnalysis(url: String, endpoint: AnalyzeEndpoint, authManager: AuthManager, generation: Int) async {
         isRunning = true
         errorMessage = nil
         requiresLogin = false
@@ -28,32 +62,59 @@ final class AnalyzeViewModel: ObservableObject {
         activeEndpoint = endpoint
         setupPipeline(for: endpoint)
         startProgressTimer()
+        AnalysisLiveActivityController.start(url: url, endpoint: endpoint)
 
         do {
+            try Task.checkCancellation()
             try await performAnalysis(url: url, endpoint: endpoint, authManager: authManager, retryOnAuthError: true)
+            if result != nil {
+                AnalysisLiveActivityController.complete(url: url, success: true, message: Loc.t(.liveActivityDone))
+            }
+        } catch is CancellationError {
+            if !wasCancelled {
+                markActiveStageError()
+                errorMessage = Loc.t(.errAnalysisCancelled)
+            }
+            AnalysisLiveActivityController.endMatching(url: url)
         } catch let apiError as APIError {
+            guard !Task.isCancelled, !wasCancelled else { return }
             markActiveStageError()
             handleAPIError(apiError, authManager: authManager)
+            AnalysisLiveActivityController.complete(url: url, success: false, message: Loc.t(.liveActivityFailed))
         } catch is DecodingError {
+            guard !Task.isCancelled, !wasCancelled else { return }
             markActiveStageError()
             errorMessage = Loc.t(.errUnexpectedResponse)
+            AnalysisLiveActivityController.complete(url: url, success: false, message: Loc.t(.liveActivityFailed))
         } catch let urlError as URLError {
+            guard !Task.isCancelled, !wasCancelled else { return }
             markActiveStageError()
-            switch urlError.code {
-            case .notConnectedToInternet, .networkConnectionLost:
-                errorMessage = Loc.t(.errNoInternet)
-            case .timedOut:
-                errorMessage = Loc.t(.errTimeout)
-            default:
-                errorMessage = Loc.t(.errNetwork)
+            if urlError.code == .cancelled {
+                errorMessage = Loc.t(.errAnalysisCancelled)
+                AnalysisLiveActivityController.endMatching(url: url)
+            } else {
+                switch urlError.code {
+                case .notConnectedToInternet, .networkConnectionLost:
+                    OfflineAnalysisQueue.enqueue(url)
+                    errorMessage = Loc.t(.networkOfflineQueued)
+                case .timedOut:
+                    errorMessage = Loc.t(.errTimeout)
+                default:
+                    errorMessage = Loc.t(.errNetwork)
+                }
+                AnalysisLiveActivityController.complete(url: url, success: false, message: Loc.t(.liveActivityFailed))
             }
         } catch {
+            guard !Task.isCancelled, !wasCancelled else { return }
             markActiveStageError()
             errorMessage = error.localizedDescription
+            AnalysisLiveActivityController.complete(url: url, success: false, message: Loc.t(.liveActivityFailed))
         }
 
         stopProgressTimer()
-        isRunning = false
+        if !wasCancelled && analysisGeneration == generation {
+            isRunning = false
+        }
     }
 
     private func performAnalysis(
@@ -62,11 +123,13 @@ final class AnalyzeViewModel: ObservableObject {
         authManager: AuthManager,
         retryOnAuthError: Bool
     ) async throws {
+        try Task.checkCancellation()
         let idToken = try await authManager.getIDToken(forceRefresh: false)
         let model: String? = endpoint == .article ? APIConfig.articleModel : nil
 
         markPipeline(.pow, status: .active)
         let pow = try await APIClient.shared.solveChallenge()
+        try Task.checkCancellation()
         markPipeline(.pow, status: .done)
 
         let firstStage: PipelineStageId = endpoint == .article ? .scraping : .transcribing
@@ -82,18 +145,33 @@ final class AnalyzeViewModel: ObservableObject {
                 pow: pow
             ) { [weak self] newStage, newDetail in
                 Task { @MainActor in
-                    self?.applyProgress(stage: newStage, detail: newDetail)
+                    guard let self, !self.wasCancelled else { return }
+                    self.applyProgress(stage: newStage, detail: newDetail)
+                    let done = Double(self.pipelineStages.filter { $0.status == .done }.count)
+                    let total = max(Double(self.pipelineStages.count), 1)
+                    let label: String = {
+                        if let newDetail, !newDetail.isEmpty { return newDetail }
+                        return self.detail ?? Loc.t(.liveActivityStarting)
+                    }()
+                    AnalysisLiveActivityController.update(
+                        url: url,
+                        stageLabel: label,
+                        progress: min((done + 0.5) / total, 0.95)
+                    )
                 }
             }
 
+            try Task.checkCancellation()
             completeAllStages()
             let decoded = try JSONDecoder().decode(AnalysisResponse.self, from: data)
             result = decoded
         } catch let apiError as APIError {
+            // Only retry auth expiry (401). Quota (402) must not be retried.
             if retryOnAuthError,
-               (apiError.status == 401 || apiError.status == 402),
+               apiError.status == 401,
                authManager.isLoggedIn,
                (try? await authManager.getIDToken(forceRefresh: true)) != nil {
+                try Task.checkCancellation()
                 try await performAnalysis(
                     url: url,
                     endpoint: endpoint,
@@ -164,7 +242,12 @@ final class AnalyzeViewModel: ObservableObject {
     }
 
     private func handleAPIError(_ error: APIError, authManager: AuthManager) {
-        if error.status == 401 || error.status == 402 {
+        if error.status == 402 {
+            requiresLogin = true
+            errorMessage = authManager.isLoggedIn ? Loc.t(.quotaSoftWallMessage) : Loc.t(.errGuestQuota)
+            return
+        }
+        if error.status == 401 {
             requiresLogin = !authManager.isLoggedIn
         } else if error.status == 403,
                   error.message.lowercased().contains("verify") || error.message.lowercased().contains("email") {
@@ -184,6 +267,7 @@ final class AnalyzeViewModel: ObservableObject {
         stage = .scraping
         detail = nil
         researchProgress = nil
+        wasCancelled = false
         setupPipeline(for: .article)
         startProgressTimer()
 
@@ -194,6 +278,7 @@ final class AnalyzeViewModel: ObservableObject {
         ]
 
         for (pipelineId, analysisStage, delay, stepDetail) in steps {
+            if Task.isCancelled || wasCancelled { break }
             markPipeline(pipelineId, status: .active)
             stage = analysisStage
             detail = stepDetail
@@ -201,13 +286,19 @@ final class AnalyzeViewModel: ObservableObject {
             markPipeline(pipelineId, status: .done)
         }
 
-        completeAllStages()
-        result = DemoAnalysisProvider.makeResponse()
+        if !wasCancelled && !Task.isCancelled {
+            completeAllStages()
+            result = DemoAnalysisProvider.makeResponse()
+        }
         stopProgressTimer()
         isRunning = false
     }
 
     func reset() {
+        analysisTask?.cancel()
+        analysisTask = nil
+        analysisGeneration += 1
+        wasCancelled = false
         stopProgressTimer()
         stage = .transcribing
         detail = nil

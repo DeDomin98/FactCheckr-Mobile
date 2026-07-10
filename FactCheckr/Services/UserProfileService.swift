@@ -111,6 +111,32 @@ final class UserProfileService {
         try await db.collection("users").document(uid).delete()
     }
 
+    /// Best-effort remote delete. Tries document ID first, then matches by sourceUrl
+    /// because local UUIDs often differ from Firestore document IDs.
+    func deleteAnalysis(uid: String, entryId: String, sourceUrl: String? = nil) async throws {
+        guard isConfigured else { return }
+        let analyses = Firestore.firestore()
+            .collection("users").document(uid)
+            .collection("analyses")
+
+        do {
+            try await analyses.document(entryId).delete()
+        } catch {
+            // Fall through to URL-based delete.
+        }
+
+        guard let sourceUrl, !sourceUrl.isEmpty else { return }
+
+        let snap = try await analyses.whereField("sourceUrl", isEqualTo: sourceUrl).getDocuments()
+        guard !snap.documents.isEmpty else { return }
+
+        let batch = Firestore.firestore().batch()
+        for doc in snap.documents {
+            batch.deleteDocument(doc.reference)
+        }
+        try await batch.commit()
+    }
+
     func fetchRemoteHistory(uid: String, limit: Int = 50) async -> [AnalysisHistoryEntry] {
         guard Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil else {
             return []

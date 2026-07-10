@@ -5,13 +5,7 @@ enum ThreatLevel: String, Codable, CaseIterable {
     case medium
     case high
 
-    var label: String {
-        switch self {
-        case .none: return "Wiarygodne"
-        case .medium: return "Podejrzane"
-        case .high: return "Wysokie ryzyko"
-        }
-    }
+    var label: String { localizedLabel }
 
     var localizedLabel: String {
         switch self {

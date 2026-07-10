@@ -6,11 +6,13 @@ final class APIClient {
     private init() {}
 
     func solveChallenge() async throws -> PowSolution {
-        let url = URL(string: "\(base)/api/challenge")!
+        guard let url = URL(string: "\(base)/api/challenge") else {
+            throw APIError(message: Loc.t(.errPowChallenge), status: nil)
+        }
         let (data, resp) = try await URLSession.shared.data(from: url)
         guard (resp as? HTTPURLResponse)?.statusCode == 200 else {
             throw APIError(
-                message: "Nie udało się pobrać wyzwania PoW",
+                message: Loc.t(.errPowChallenge),
                 status: (resp as? HTTPURLResponse)?.statusCode
             )
         }
@@ -53,7 +55,10 @@ final class APIClient {
         ]
         if let model { body["model"] = model }
 
-        var req = URLRequest(url: URL(string: "\(base)\(path)")!)
+        guard let requestURL = URL(string: "\(base)\(path)") else {
+            throw APIError(message: Loc.t(.errAnalysisFailed), status: nil)
+        }
+        var req = URLRequest(url: requestURL)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue("text/x-ndjson", forHTTPHeaderField: "Accept")
@@ -69,6 +74,7 @@ final class APIClient {
         if ct.contains("text/x-ndjson") {
             var finalData: Data?
             for try await line in bytes.lines {
+                try Task.checkCancellation()
                 let trimmed = line.trimmingCharacters(in: .whitespaces)
                 guard !trimmed.isEmpty, let d = trimmed.data(using: .utf8) else { continue }
                 guard let obj = try? JSONSerialization.jsonObject(with: d) as? [String: Any],
@@ -83,7 +89,7 @@ final class APIClient {
                     }
                 case "error":
                     throw APIError(
-                        message: (obj["error"] as? String) ?? "Analiza nie powiodła się",
+                        message: (obj["error"] as? String) ?? Loc.t(.errAnalysisFailed),
                         status: status
                     )
                 default:
@@ -91,22 +97,28 @@ final class APIClient {
                 }
             }
             guard let finalData else {
-                throw APIError(message: "Pusta odpowiedź analizy", status: status)
+                throw APIError(message: Loc.t(.errEmptyAnalysis), status: status)
             }
             return finalData
         }
 
         var collected = Data()
-        for try await b in bytes { collected.append(b) }
+        for try await b in bytes {
+            try Task.checkCancellation()
+            collected.append(b)
+        }
         if status >= 400 {
             let msg = (try? JSONSerialization.jsonObject(with: collected) as? [String: Any])?["error"] as? String
-            throw APIError(message: msg ?? "Analiza nie powiodła się (\(status))", status: status)
+            throw APIError(message: msg ?? "\(Loc.t(.errAnalysisFailed)) (\(status))", status: status)
         }
         return collected
     }
 
     func sendVerificationEmail(idToken: String, lang: String = "pl") async throws {
-        var req = URLRequest(url: URL(string: "\(base)/api/auth/send-verification-email")!)
+        guard let url = URL(string: "\(base)/api/auth/send-verification-email") else {
+            throw APIError(message: Loc.t(.errSendVerification), status: nil)
+        }
+        var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
@@ -116,7 +128,7 @@ final class APIClient {
         let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
         guard status == 200 else {
             let msg = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["error"] as? String
-            throw APIError(message: msg ?? "Nie udało się wysłać e-maila weryfikacyjnego", status: status)
+            throw APIError(message: msg ?? Loc.t(.errSendVerification), status: status)
         }
     }
 }

@@ -51,4 +51,13 @@ enum BackgroundInflightStore {
     static func removeAll(for uid: String) {
         persist(load().filter { $0.uid != uid })
     }
+
+    /// Drops expired inflight markers (e.g. after a crashed / meta-less completion).
+    static func removeExpired() {
+        persist(load())
+    }
+
+    static func allInflight(uid: String) -> [String] {
+        load().filter { $0.uid == uid }.map(\.url)
+    }
 }

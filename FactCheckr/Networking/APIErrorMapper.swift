@@ -5,26 +5,26 @@ enum APIErrorMapper {
         if let status = error.status {
             switch status {
             case 401:
-                return "Zaloguj się, aby kontynuować. Nowe konto daje 5 darmowych analiz."
+                return Loc.t(.errLoginRequired)
             case 402:
-                return "Wykorzystałeś darmową analizę gościa. Utwórz konto, aby dostać 5 analiz."
+                return Loc.t(.errGuestQuota)
             case 403:
                 if error.message.lowercased().contains("verify") || error.message.lowercased().contains("email") {
-                    return "Potwierdź adres e-mail przed kolejną analizą."
+                    return Loc.t(.errVerifyEmail)
                 }
-                return "Weryfikacja bezpieczeństwa nie powiodła się. Spróbuj ponownie."
+                return Loc.t(.errSecurityCheck)
             case 422:
                 if error.message.lowercased().contains("long") || error.message.lowercased().contains("30") {
-                    return "Film za długi — maksymalnie 30 minut."
+                    return Loc.t(.errVideoTooLong)
                 }
                 if error.message.lowercased().contains("speech") {
-                    return "Za mało mowy w nagraniu do analizy."
+                    return Loc.t(.errTooLittleSpeech)
                 }
                 return error.message
             case 502:
-                return "Usługa analizy chwilowo niedostępna. Spróbuj za chwilę."
+                return Loc.t(.errServiceUnavailable)
             case 504:
-                return "Przekroczono limit czasu analizy. Spróbuj ponownie."
+                return Loc.t(.errAnalysisTimeout)
             default:
                 break
             }
@@ -33,6 +33,6 @@ enum APIErrorMapper {
     }
 
     static func message(for status: Int, body: String?) -> String {
-        message(for: APIError(message: body ?? "Nieznany błąd", status: status))
+        message(for: APIError(message: body ?? Loc.t(.errUnknown), status: status))
     }
 }
